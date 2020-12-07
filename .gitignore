@@ -1,0 +1,6 @@
+/node_modules
+/packages/admin/node_modules
+/packages/client/node_modules
+/packages/common/node_modules
+
+.vercel
