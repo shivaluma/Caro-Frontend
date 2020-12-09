@@ -1,0 +1,56 @@
+{
+  "root": true, // Make sure eslint picks up the config at the root of the directory
+  "parserOptions": {
+    "ecmaVersion": 2020, // Use the latest ecmascript standard
+    "sourceType": "module", // Allows using import/export statements
+    "ecmaFeatures": {
+      "jsx": true // Enable JSX since we're using React
+    }
+  },
+  "extends": [
+    "eslint:recommended",
+    "airbnb",
+    "airbnb/hooks",
+    "plugin:react/recommended",
+    "plugin:jsx-a11y/recommended",
+    "plugin:prettier/recommended" // Make this the last element so prettier config overrides other formatting rules
+  ],
+  "rules": {
+    "no-unreachable": "warn",
+    "react/destructuring-assignment": "off",
+    "react/no-array-index-key": "off",
+    "no-plusplus": "off",
+    "no-shadow": "off",
+    "global-require": "off",
+    "react/prop-types": "off",
+    "import/no-unresolved": "off",
+    "no-undef": "off",
+    "react/jsx-props-no-spreading": "off",
+    "react/jsx-closing-bracket-location": "off",
+    "no-use-before-define": "off",
+    "react/require-default-props": "off",
+    "react/style-prop-object": "off",
+    "react/forbid-prop-types": "off",
+    "import/no-extraneous-dependencies": "off",
+    "consistent-return": "off",
+    "no-console": "off",
+    "import/prefer-default-export": "off",
+    "react/react-in-jsx-scope": "off",
+    "import/no-duplicates": "off",
+    "react/jsx-filename-extension": [
+      1,
+      {
+        "extensions": [".js", ".jsx"]
+      }
+    ],
+    "prettier/prettier": [
+      "warn",
+      {
+        "trailingComma": "es5",
+        "singleQuote": true,
+        "printWidth": 120
+      }
+    ]
+  },
+  "plugins": ["prettier"]
+}
