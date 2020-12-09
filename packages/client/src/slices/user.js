@@ -4,6 +4,7 @@ import { createSlice } from '@reduxjs/toolkit';
 import API from '@caro/common/api';
 
 import socket from 'configs/socket';
+import { initArray } from 'slices/online';
 import { changeInit } from './init';
 
 const userSlice = createSlice({
@@ -11,10 +12,16 @@ const userSlice = createSlice({
   initialState: null,
   reducers: {
     setUser(state, action) {
-      socket.emit('msg-to-server', action.payload);
+      const interval = setInterval(() => {
+        if (socket && socket.connected) {
+          socket.emit('user-online', action.payload.email);
+          clearInterval(interval);
+        }
+      }, 1000);
       return action.payload;
     },
     removeUser(state) {
+      socket.emit('user-offline', state.email);
       return null;
     },
   },
@@ -26,15 +33,15 @@ export default userSlice.reducer;
 
 // Actions
 
-export const signin = ({ username, password }) => async (dispatch) => {
+export const signin = ({ email, password }) => async (dispatch) => {
   const res = await API.post('auth/signin', {
-    username,
+    email,
     password,
   });
-  if (res.data) {
-    localStorage.setItem('whatisthis', res.data.accessToken);
-    console.log(res.data.payload);
-    dispatch(setUser(res.data.payload));
+  if (res?.data?.data) {
+    localStorage.setItem('whatisthis', res.data.data.accessToken);
+
+    dispatch(setUser(res.data.data.user));
   }
 };
 
@@ -82,11 +89,11 @@ export const signup = ({ email, password, confirmPassword }) => async (dispatch)
 export const initUserLoading = () => async (dispatch) => {
   try {
     const res = await API.get('user/me');
-
-    if (res.data) {
-      dispatch(setUser(res.data));
-      socket.emit('userlogin', res.data);
+    const onlines = await API.get('user/online');
+    if (res?.data?.data) {
+      dispatch(setUser(res.data.data));
     }
+    dispatch(initArray(onlines.data.data));
 
     return res;
   } catch (e) {

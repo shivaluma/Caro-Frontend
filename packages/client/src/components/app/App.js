@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { Auth } from 'pages';
-
+import socket from 'configs/socket';
 import 'assets/css/tailwind.css';
 
 import { Suspense } from 'react';
@@ -12,14 +12,29 @@ import Loading from 'components/Loading';
 import { initUserLoading } from 'slices/user';
 import ProtectedRoute from 'components/ProtectedRoute';
 import { Main } from 'pages';
+import { addItem, removeItem } from 'slices/online';
 
 function App() {
   const dispatch = useDispatch();
   const isInit = useSelector((state) => state.init);
+  const user = useSelector((state) => state.user);
   useEffect(() => {
     (async function init() {
       await dispatch(initUserLoading());
     })();
+
+    socket.on('user-change', ({ online, data }) => {
+      if (online) {
+        dispatch(addItem(data.email));
+      } else {
+        dispatch(removeItem(data.email));
+      }
+    });
+
+    return () => {
+      socket.emit('user-offline', user?.email);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch]);
   return isInit ? (
     <Loading />

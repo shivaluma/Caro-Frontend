@@ -23,6 +23,8 @@ const LoginForm = ({ changeMode, redirect }) => {
       changeLoading();
       redirect();
     } catch (err) {
+      console.log(err.response);
+
       setError('password', {
         type: 'manual',
         message: err.response.data.message,
@@ -34,11 +36,11 @@ const LoginForm = ({ changeMode, redirect }) => {
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="flex flex-col">
-        <label htmlFor="username">
-          <span className="px-0 mb-1 text-left tile-structure-name ">Username</span>
+        <label htmlFor="email">
+          <span className="px-0 mb-1 text-left tile-structure-name ">Email</span>
           <input
-            name="username"
-            id="username"
+            name="email"
+            id="email"
             className={clsx(
               'w-full p-2 border border-gray-230 rounded-md focus:outline-none',
               errors.name && 'border-red-500'
@@ -49,7 +51,7 @@ const LoginForm = ({ changeMode, redirect }) => {
             autoComplete="on"
           />
         </label>
-        {errors.username && <span className="mt-1 text-xs font-medium text-red-600">{errors.username.message}</span>}
+        {errors.email && <span className="mt-1 text-xs font-medium text-red-600">{errors.email.message}</span>}
 
         <label className="mt-4" htmlFor="password">
           <span className="px-0 mb-1 text-left tile-structure-name">Password</span>
