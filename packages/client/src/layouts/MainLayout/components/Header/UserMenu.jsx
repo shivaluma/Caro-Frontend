@@ -8,7 +8,7 @@ const UserMenu = () => {
   const handleOpenUserProfileModal = () => {
     dispatch(toggleProfileSetting());
   };
-  const displayName = useSelector((state) => state.user.username);
+  const displayName = useSelector((state) => state.user.email);
 
   return (
     <div className="z-0 flex flex-col w-48 overflow-hidden">
