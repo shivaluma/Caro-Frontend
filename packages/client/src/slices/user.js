@@ -2,6 +2,8 @@
 /* eslint-disable no-param-reassign */
 import { createSlice } from '@reduxjs/toolkit';
 import API from '@caro/common/api';
+
+import socket from 'configs/socket';
 import { changeInit } from './init';
 
 const userSlice = createSlice({
@@ -9,6 +11,7 @@ const userSlice = createSlice({
   initialState: null,
   reducers: {
     setUser(state, action) {
+      socket.emit('msg-to-server', action.payload);
       return action.payload;
     },
     removeUser(state) {
@@ -30,6 +33,7 @@ export const signin = ({ username, password }) => async (dispatch) => {
   });
   if (res.data) {
     localStorage.setItem('whatisthis', res.data.accessToken);
+    console.log(res.data.payload);
     dispatch(setUser(res.data.payload));
   }
 };
@@ -79,8 +83,9 @@ export const initUserLoading = () => async (dispatch) => {
   try {
     const res = await API.get('user/me');
 
-    if (!res.data.isError) {
-      dispatch(setUser(res.data.data));
+    if (res.data) {
+      dispatch(setUser(res.data));
+      socket.emit('userlogin', res.data);
     }
 
     return res;

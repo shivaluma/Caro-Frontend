@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import clsx from 'clsx';
@@ -11,7 +12,7 @@ const ProfileForm = ({ handleToggleModal }) => {
   const dispatch = useDispatch();
   const onSubmit = async ({ displayName }) => {
     changeLoading(true);
-    const isSuccess = await dispatch(updateProfile(displayName));
+    await dispatch(updateProfile(displayName));
     changeLoading(false);
 
     handleToggleModal();
@@ -34,15 +35,13 @@ const ProfileForm = ({ handleToggleModal }) => {
               required: 'Required',
               pattern: {
                 value: /^.{10,40}$/i,
-                message: 'Invalid Display Name (at least 10 characters, max 40 characters).'
-              }
+                message: 'Invalid Display Name (at least 10 characters, max 40 characters).',
+              },
             })}
           />
         </label>
         {errors.displayName && (
-          <span className="mt-1 text-xs font-medium text-red-600">
-            {errors.displayName.message}
-          </span>
+          <span className="mt-1 text-xs font-medium text-red-600">{errors.displayName.message}</span>
         )}
 
         <label htmlFor="email">
@@ -60,12 +59,13 @@ const ProfileForm = ({ handleToggleModal }) => {
         </label>
 
         <button
-          className="mt-6 text-xs font-medium text-white bg-yellow-500 border rounded-lg focus:outline-none"
+          className="mt-6 text-xs font-medium text-white border rounded-lg bg-main focus:outline-none"
           type="submit"
           disabled={isLoading}>
           <div className="flex items-center justify-center h-10">
-            {' '}
+         
             {isLoading ? <Spin className="mt-1" /> : 'Save'}
+
           </div>
         </button>
       </div>

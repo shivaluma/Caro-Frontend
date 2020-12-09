@@ -1,13 +1,13 @@
 import { Modal } from 'antd';
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { changeMode } from '../../app/slices/profileSlice';
+import { toggleProfileSetting } from 'slices/profile';
 import { ProfileForm } from './components';
 
 const UpdateProfileModal = () => {
-  const profileShowing = useSelector((state) => state.profile);
+  const profileShowing = useSelector((state) => state.profile.showProfile);
   const dispatch = useDispatch();
-  const handleCancel = () => dispatch(changeMode());
+  const handleCancel = () => dispatch(toggleProfileSetting());
   return (
     <Modal
       title="My Profile Settings."

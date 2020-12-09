@@ -1,1 +1,1 @@
-export { default as UpdateProfileModal } from './UpdateProfileModal';
+export { default } from './UpdateProfileModal';
