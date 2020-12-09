@@ -2,7 +2,6 @@
   "name": "caro",
   "private": true,
   "scripts": {
-    "build": "yarn --cwd packages/client build",
     "dev:c": "yarn --cwd packages/client start",
     "dev:a": "yarn --cwd packages/admin start"
   },
