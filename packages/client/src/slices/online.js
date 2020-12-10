@@ -10,6 +10,7 @@ const loadingSlice = createSlice({
       return action.payload;
     },
     add(state, action) {
+      if (state.includes(action.payload)) return state;
       return [...state, action.payload];
     },
     remove(state, action) {
