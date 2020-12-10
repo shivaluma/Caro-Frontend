@@ -1,9 +1,9 @@
 import io from 'socket.io-client';
 
-const ENDPOINT = 'http://35.201.203.222:4000/';
+const ENDPOINT = 'https://shivaluma.wtf';
 const socket = io(ENDPOINT, {
   transports: ['websocket'],
-  upgrade: false,
+  
 });
 
 export default socket;
