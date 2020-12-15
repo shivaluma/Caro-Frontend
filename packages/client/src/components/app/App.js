@@ -11,7 +11,7 @@ import { Suspense } from 'react';
 import Loading from 'components/Loading';
 import { initUserLoading } from 'slices/user';
 import ProtectedRoute from 'components/ProtectedRoute';
-import { Main } from 'pages';
+import { Main, Room } from 'pages';
 import { addItem, removeItem } from 'slices/online';
 
 function App() {
@@ -55,6 +55,7 @@ function App() {
       <Suspense fallback={Loading}>
         <Switch>
           <ProtectedRoute exact path="/" component={Main} />
+          <ProtectedRoute exact path="/id" component={Room} />
           <Route exact path="/login" component={Auth} />
         </Switch>
       </Suspense>

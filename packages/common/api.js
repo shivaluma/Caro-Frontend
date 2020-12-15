@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const instance = axios.create({
-  baseURL: `https://shivaluma.wtf/caroapi/v1/`,
+  baseURL: `http://localhost:5000/api/v1/`,
 });
 
 // localhost eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVmOGU5MTM4NzY0OTRlMGE2ZThkNWUxNCIsInVzZXJuYW1lIjoic2hpdmFsdW1hMSIsImRpc3BsYXlOYW1lIjoic2hpdmFsdW1hMSIsImlhdCI6MTYwMzYzNDU1NH0.N8cI-r4LKe5zbVxRyrCBkiTmfVrc9dyoC2aqryMCJeA

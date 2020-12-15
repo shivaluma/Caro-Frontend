@@ -8,7 +8,6 @@ import { AddButton, GameButton } from './components';
 const Main = () => {
   // const dispatch = useDispatch();
   const onlines = useSelector((state) => state.online);
-  console.log(onlines);
   const Layout = useMemo(
     () =>
       // eslint-disable-next-line react-hooks/rules-of-hooks
