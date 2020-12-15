@@ -252,3 +252,22 @@ button::focus {
 
   transform: translateY(-50%) !important;
 }
+
+.right-icon {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+.left-icon {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+}
+
+.right-pane {
+  position: absolute;
+  top: 80px;
+  right: 0;
+  height: calc(100vh - 80px);
+}
