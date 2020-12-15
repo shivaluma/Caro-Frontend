@@ -3,7 +3,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { useLayout } from 'hooks';
 
 import { RoomService } from 'services';
-import { Board, Chat, UserPlay, WatchList } from './components';
+import { Chat, UserPlay, Board } from './components';
 
 const Room = ({ match }) => {
   // const dispatch = useDispatch();
@@ -38,40 +38,21 @@ const Room = ({ match }) => {
 
   return (
     <Layout>
-      <div className="hidden left-pane w-80 xl:block">
-        <div className="flex flex-col mt-2">
-          <span className="text-lg font-medium text-center">
-            <h3>Chat</h3>
-          </span>
+      <div className="flex justify-center max-h-full mt-10">
+        <div className="flex flex-col w-80">
+          <UserPlay />
+          <div className="flex-1" />
+          <UserPlay />
+        </div>
+
+        <div className="flex items-center justify-center h-full px-3 mx-2 rounded-lg bg-board">
+          <div className="play-area">
+            <Board />
+          </div>
+        </div>
+
+        <div className="w-80">
           <Chat />
-        </div>
-      </div>
-
-      <div className="container flex flex-col mx-auto mt-10">
-        <div className="play-area">
-          <Board />
-        </div>
-        <div className="flex flex-wrap w-full mt-8" />
-      </div>
-
-      {/* <div className="flex flex-col">
-        <h5>Who is online?</h5>
-        <ul>
-          {onlines.map((email) => (
-            <li key={email}>{email}</li>
-          ))}
-        </ul>
-      </div> */}
-
-      <div className="hidden pl-5 right-pane w-80 xl:block">
-        <div className="flex flex-col mt-2">
-          <span className="text-lg font-medium text-center">People in room</span>
-          <span className="text-lg font-medium">Player 1</span>
-          <UserPlay />
-          <span className="text-lg font-medium">Player 2</span>
-          <UserPlay />
-          <span className="text-lg font-medium text-center">Watches</span>
-          <WatchList />
         </div>
       </div>
     </Layout>

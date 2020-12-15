@@ -37,6 +37,7 @@ module.exports = {
       purple: colors.violet,
       pink: colors.pink,
       main: '#fb5779',
+      board: '#5a7896',
     },
     spacing: {
       px: '1px',
