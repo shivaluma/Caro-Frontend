@@ -1,7 +1,7 @@
 /* eslint-disable react/display-name */
 import { useMemo, useCallback, useEffect, useState } from 'react';
 import { useLayout } from 'hooks';
-
+import { useHistory } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import socket from 'configs/socket';
 import { RoomService } from 'services';
@@ -11,6 +11,7 @@ const Main = () => {
   // const dispatch = useDispatch();
   const onlines = useSelector((state) => state.online);
   const [rooms, setRooms] = useState([]);
+  const history = useHistory();
   useEffect(() => {
     (async () => {
       const rooms = await RoomService.getAllRooms();
@@ -18,19 +19,28 @@ const Main = () => {
       setRooms(rooms);
     })();
 
-    socket.on('created-room-info', (data) => {
-      console.log(data);
-      setRooms((prev) => [...prev, data.room]);
-    });
-
     socket.on('new-room', (data) => {
       setRooms((prev) => [...prev, data.room]);
     });
   }, []);
 
+  useEffect(() => {
+    if (!history) return;
+    socket.on('created-room-info', (data) => {
+      history.push(`/${data.room.roomId}`);
+    });
+  }, [history]);
+
   const handleCreateNewRoom = useCallback(() => {
     socket.emit('create-room', 'gigi');
   }, []);
+
+  const handleRoomClick = useCallback(
+    (roomId) => {
+      history.push(`/${roomId}`);
+    },
+    [history]
+  );
   const Layout = useMemo(
     () =>
       // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -51,7 +61,8 @@ const Main = () => {
     <Layout>
       <div className="container flex flex-col mx-auto mt-8">
         <div className="flex flex-wrap w-full mt-8 overflow-y-scroll room-container">
-          {rooms?.length > 0 && rooms.map((room) => <GameButton key={room.roomId} room={room} />)}
+          {rooms?.length > 0 &&
+            rooms.map((room) => <GameButton key={room.roomId} onClick={handleRoomClick} room={room} />)}
         </div>
       </div>
 

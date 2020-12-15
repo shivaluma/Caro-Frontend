@@ -91,9 +91,9 @@ export const initUserLoading = () => async (dispatch) => {
     const res = await API.get('user/me');
     const onlines = await API.get('user/online');
     if (res?.data?.data) {
-      dispatch(setUser(res.data.data));
+      await dispatch(setUser(res.data.data));
     }
-    dispatch(initArray(onlines?.data?.data));
+    await dispatch(initArray(onlines?.data?.data));
 
     return res;
   } catch (e) {

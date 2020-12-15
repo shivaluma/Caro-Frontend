@@ -5,10 +5,7 @@ import { MdLock } from 'react-icons/md';
 // import dayjs from 'utils/dayjs';
 // import { IoPlayForward } from 'react-icons/io5';
 
-const GameButton = ({ room, hasPassword = true, hasStarted = true }) => {
-  const onClick = (event) => {
-    event.stopPropagation();
-  };
+const GameButton = ({ onClick, room, hasPassword = true, hasStarted = true }) => {
   // const [time, setTime] = useState(dayjs(room.createdAt).fromNow());
 
   // useEffect(() => {
@@ -23,7 +20,7 @@ const GameButton = ({ room, hasPassword = true, hasStarted = true }) => {
     <div className="relative duration-300 transform group hover:-translate-y-2 ">
       <button
         type="button"
-        onClick={onClick}
+        onClick={() => onClick(room.roomId)}
         className="flex outline-none tile-structure hover:bg-gray-200 focus:outline-none">
         <div className="relative w-32 h-32">
           <div className="text-6xl text-white bg-main box-button">

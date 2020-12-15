@@ -23,7 +23,6 @@ function App() {
     (async function init() {
       await dispatch(initUserLoading());
     })();
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch]);
 
@@ -55,8 +54,9 @@ function App() {
       <Suspense fallback={Loading}>
         <Switch>
           <ProtectedRoute exact path="/" component={Main} />
-          <ProtectedRoute exact path="/id" component={Room} />
+
           <Route exact path="/login" component={Auth} />
+          <ProtectedRoute path="/:id" component={Room} />
         </Switch>
       </Suspense>
     </Router>

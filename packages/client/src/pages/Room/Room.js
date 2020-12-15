@@ -1,28 +1,40 @@
 /* eslint-disable react/display-name */
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useLayout } from 'hooks';
 
-import { useSelector } from 'react-redux';
+import { RoomService } from 'services';
 import { Board, Chat, UserPlay, WatchList } from './components';
 
-const Room = () => {
+const Room = ({ match }) => {
   // const dispatch = useDispatch();
-  const onlines = useSelector((state) => state.online);
-  console.log(onlines);
 
+  // eslint-disable-next-line no-unused-vars
+  const [room, setRoom] = useState(null);
   const Layout = useMemo(
     () =>
       // eslint-disable-next-line react-hooks/rules-of-hooks
       useLayout({
         left: () => (
           <div key="leftHeader" className="ml-2 text-xl font-medium text-gray-800">
-            Rooms
+            {match.params.id !== null && `Room #${match.params.id}`}
           </div>
         ),
-        right: () => <div key="right" className="ml-4" />,
       }),
-    []
+    [match.params.id]
   );
+
+  useEffect(() => {
+    const roomIdNum = Number(match.params.id);
+    if (!Number.isInteger(roomIdNum) || roomIdNum < 0 || roomIdNum >= 20) {
+      console.log('tach');
+      return;
+    }
+    (async () => {
+      const room = await RoomService.getRoomById(roomIdNum, 'public');
+
+      setRoom(room.data);
+    })();
+  }, [match.params.id]);
 
   return (
     <Layout>
@@ -56,10 +68,8 @@ const Room = () => {
           <span className="text-lg font-medium text-center">People in room</span>
           <span className="text-lg font-medium">Player 1</span>
           <UserPlay />
-
           <span className="text-lg font-medium">Player 2</span>
           <UserPlay />
-
           <span className="text-lg font-medium text-center">Watches</span>
           <WatchList />
         </div>

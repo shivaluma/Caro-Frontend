@@ -9,6 +9,7 @@ export default function Board() {
       for (let j = 0; j < 20; j++) {
         temp.push(
           <Square
+
           // value={props.squares[i * 3 + j]}
           // onClick={() => props.onClick(i * 3 + j)}
           // isBold={i * 3 + j === props.boldStep}
@@ -18,7 +19,7 @@ export default function Board() {
       }
       temps.push(<div className="board-row">{temp}</div>);
     }
-    console.log(temps);
+
     return temps;
   };
   return <div>{createBoard()}</div>;
