@@ -10,6 +10,7 @@
     "antd": "^4.9.2",
     "autoprefixer": "^9",
     "clsx": "^1.1.1",
+    "dayjs": "^1.9.7",
     "eslint-webpack-plugin": "^2.4.1",
     "postcss": "^7",
     "react": "^17.0.1",

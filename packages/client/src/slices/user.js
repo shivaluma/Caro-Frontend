@@ -93,7 +93,7 @@ export const initUserLoading = () => async (dispatch) => {
     if (res?.data?.data) {
       dispatch(setUser(res.data.data));
     }
-    dispatch(initArray(onlines.data.data));
+    dispatch(initArray(onlines?.data?.data));
 
     return res;
   } catch (e) {

@@ -1,35 +1,57 @@
 /* eslint-disable react/display-name */
-import { useMemo } from 'react';
+import { useMemo, useCallback, useEffect, useState } from 'react';
 import { useLayout } from 'hooks';
 
 import { useSelector } from 'react-redux';
+import socket from 'configs/socket';
+import { RoomService } from 'services';
 import { AddButton, GameButton } from './components';
 
 const Main = () => {
   // const dispatch = useDispatch();
   const onlines = useSelector((state) => state.online);
-  console.log(onlines);
+  const [rooms, setRooms] = useState([]);
+  useEffect(() => {
+    (async () => {
+      const rooms = await RoomService.getAllRooms();
+      console.log(rooms);
+      setRooms(rooms);
+    })();
+
+    socket.on('created-room-info', (data) => {
+      console.log(data);
+      setRooms((prev) => [...prev, data.room]);
+    });
+
+    socket.on('new-room', (data) => {
+      setRooms((prev) => [...prev, data.room]);
+    });
+  }, []);
+
+  const handleCreateNewRoom = useCallback(() => {
+    socket.emit('create-room', 'gigi');
+  }, []);
   const Layout = useMemo(
     () =>
       // eslint-disable-next-line react-hooks/rules-of-hooks
       useLayout({
         left: () => (
-          <div key="leftHeader" className="ml-2 text-xl font-medium text-gray-800">
-            Rooms
+          <div className="flex">
+            <div key="leftHeader" className="ml-2 text-lg font-medium text-gray-800">
+              Rooms <span className="text-lg">({rooms.length})</span>
+            </div>
           </div>
         ),
+        right: () => <AddButton handleClick={handleCreateNewRoom} />,
       }),
-    []
+    [rooms.length, handleCreateNewRoom]
   );
 
   return (
     <Layout>
-      <div className="container flex flex-col mx-auto mt-10">
-        <span className="w-full pb-3 text-3xl border-b border-gray-400">{`All rooms (${onlines.length})`}</span>
-
-        <div className="flex flex-wrap w-full mt-8">
-          <AddButton handleClick={() => {}} />
-          {onlines?.length > 0 && onlines.map((online) => <GameButton key={online} name={online} id={online} />)}
+      <div className="container flex flex-col mx-auto mt-8">
+        <div className="flex flex-wrap w-full mt-8 overflow-y-scroll room-container">
+          {rooms?.length > 0 && rooms.map((room) => <GameButton key={room.roomId} room={room} />)}
         </div>
       </div>
 

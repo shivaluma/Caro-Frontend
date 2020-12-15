@@ -271,3 +271,11 @@ button::focus {
   right: 0;
   height: calc(100vh - 80px);
 }
+
+.room-container {
+  max-height: calc(100vh - 170px);
+}
+
+.new-button {
+  background: linear-gradient(to top right, #ff5263 0%, #ff7381 35%, #fcbd01 100%);
+}
