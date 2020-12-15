@@ -14,14 +14,14 @@ const userSlice = createSlice({
     setUser(state, action) {
       const interval = setInterval(() => {
         if (socket && socket.connected) {
-          socket.emit('user-online', action.payload.email);
+          socket.emit('user-online', action.payload);
           clearInterval(interval);
         }
-      }, 1000);
+      }, 100);
       return action.payload;
     },
     removeUser(state) {
-      socket.emit('user-offline', state.email);
+      socket.emit('user-offline', state);
       return null;
     },
   },

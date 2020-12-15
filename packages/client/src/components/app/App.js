@@ -38,7 +38,7 @@ function App() {
 
     if (user && user.email) {
       const emitOffline = () => {
-        socket.emit('user-offline', user?.email);
+        socket.emit('user-offline', user);
       };
 
       window.onbeforeunload = (ev) => {
