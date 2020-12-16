@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function Chat() {
   return (
-    <div className="chat">
+    <div className="h-full chat">
       <div className="chat-history">
         <ul>
           <li className="clearfix">
@@ -11,7 +11,7 @@ export default function Chat() {
               &nbsp; &nbsp;
               <span className="message-data-name">Olia</span>
             </div>
-            <div className="message other-message float-right">
+            <div className="float-right message other-message">
               Hi Vincent, how are you? How is the project coming along?
             </div>
           </li>
@@ -32,7 +32,7 @@ export default function Chat() {
               &nbsp; &nbsp;
               <span className="message-data-name">Olia</span>
             </div>
-            <div className="message other-message float-right">
+            <div className="float-right message other-message">
               Well I am not sure. The rest of the team is not here yet. Maybe in an hour or so? Have you faced any
               problems at the last phase of the project?
             </div>
@@ -50,7 +50,7 @@ export default function Chat() {
         </ul>
       </div>
 
-      <div className="chat-message clearfix">
+      <div className="clearfix chat-message">
         <textarea name="message-to-send" id="message-to-send" placeholder="Type your message" rows="3" />
         <button type="button">Send</button>
       </div>
