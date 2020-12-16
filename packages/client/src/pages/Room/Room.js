@@ -271,6 +271,7 @@ const Room = ({ match }) => {
               currentUserPos={pos}
               user={room.firstPlayer}
               onPickPosition={handleOnUserPickPosition}
+              next={next}
             />
             <div className="flex-1 p-4 my-6 bg-gray-100 rounded-lg">
               <div className="flex flex-row">
@@ -291,6 +292,7 @@ const Room = ({ match }) => {
               currentUserPos={pos}
               user={room.secondPlayer}
               onPickPosition={handleOnUserPickPosition}
+              next={next}
             />
           </div>
 
