@@ -1,7 +1,8 @@
-import io from 'socket.io-client';
+import * as io from 'socket.io-client';
 
-const ENDPOINT = 'https://shivaluma.wtf';
-const socket = io(ENDPOINT, {
+// const ENDPOINT_PROD = 'https://shivaluma.wtf';
+const ENDPOINT_DEV = 'https://shivaluma.wtf';
+const socket = io(ENDPOINT_DEV, {
   transports: ['websocket'],
 });
 

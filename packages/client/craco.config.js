@@ -32,7 +32,7 @@ module.exports = {
         swcLoaderOptions: {
           jsc: {
             externalHelpers: true,
-            target: 'es5',
+            target: 'esnext',
             parser: {
               syntax: 'typescript',
               tsx: true,

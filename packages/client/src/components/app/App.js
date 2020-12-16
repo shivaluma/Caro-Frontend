@@ -11,8 +11,9 @@ import { Suspense } from 'react';
 import Loading from 'components/Loading';
 import { initUserLoading } from 'slices/user';
 import ProtectedRoute from 'components/ProtectedRoute';
-import { Main } from 'pages';
+import { Main, Room } from 'pages';
 import { addItem, removeItem } from 'slices/online';
+import { Profile } from 'pages';
 
 function App() {
   const dispatch = useDispatch();
@@ -23,7 +24,6 @@ function App() {
     (async function init() {
       await dispatch(initUserLoading());
     })();
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch]);
 
@@ -38,7 +38,7 @@ function App() {
 
     if (user && user.email) {
       const emitOffline = () => {
-        socket.emit('user-offline', user?.email);
+        socket.emit('user-offline', user);
       };
 
       window.onbeforeunload = (ev) => {
@@ -55,7 +55,10 @@ function App() {
       <Suspense fallback={Loading}>
         <Switch>
           <ProtectedRoute exact path="/" component={Main} />
+
           <Route exact path="/login" component={Auth} />
+          <Route path="/profile/:id" component={Profile} />
+          <ProtectedRoute path="/:id" component={Room} />
         </Switch>
       </Suspense>
     </Router>
