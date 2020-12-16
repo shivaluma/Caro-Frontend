@@ -119,21 +119,22 @@ const Room = ({ match }) => {
   };
 
   const handleTick = async (i, j) => {
-    if (user === userTurn) {
-      const roomIdNum = Number(match.params.id);
-      const newBoard = board.map((row, indexX) => {
-        if (indexX === i)
-          return row.map((column, indexY) => {
-            if (indexY === j) return next ? 'X' : 'O';
-            return column;
-          });
-        return row;
-      });
+    if (userTurn != null)
+      if (user._id === userTurn._id) {
+        const roomIdNum = Number(match.params.id);
+        const newBoard = board.map((row, indexX) => {
+          if (indexX === i)
+            return row.map((column, indexY) => {
+              if (indexY === j) return next ? 'X' : 'O';
+              return column;
+            });
+          return row;
+        });
 
-      await setBoard([...newBoard]);
-      if (calculateWin(i, j, newBoard[i][j])) alert(calculateWin(i, j, newBoard[i][j]));
-      socket.emit('room-change', { board: newBoard, roomId: roomIdNum, next });
-    }
+        await setBoard([...newBoard]);
+        if (calculateWin(i, j, newBoard[i][j])) alert(calculateWin(i, j, newBoard[i][j]));
+        socket.emit('room-change', { board: newBoard, roomId: roomIdNum, next });
+      }
   };
 
   const Layout = useMemo(
@@ -150,7 +151,7 @@ const Room = ({ match }) => {
   );
 
   useEffect(() => {
-    socket.on('player-change-side', ({ user, side, leaveSide }) => {
+    socket.on('player-change-side', ({ user, side, leaveSide, userTurn }) => {
       if (side === 1) {
         setRoom((prev) => ({ ...prev, firstPlayer: user }));
       } else if (side === 2) {
@@ -162,12 +163,13 @@ const Room = ({ match }) => {
       } else if (leaveSide === 2) {
         setRoom((prev) => ({ ...prev, secondPlayer: null }));
       }
+      setUserTurn(userTurn);
     });
-    socket.on('room-changed', (data) => {
-      // console.log(data);
-      setBoard(data.board);
-      setNext(!data.next);
-      setUserTurn(data.user);
+    socket.on('room-changed', ({ board, next, user }) => {
+      setBoard(board);
+      console.log(user);
+      setNext(!next);
+      setUserTurn(user);
     });
   }, []);
 
