@@ -53,7 +53,7 @@ const Profile = (props) => {
 
               <span className="flex mt-5 text-5xl text-yellow-500">
                 <ImTrophy className="mr-2" />
-                5025
+                {user.points || 0}
               </span>
               <div className="flex mt-5 text-2xl font-semibold">
                 <span className="text-green-600">{user.winCount || 0}W</span>
