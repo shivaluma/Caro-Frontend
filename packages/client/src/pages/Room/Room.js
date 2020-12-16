@@ -3,6 +3,8 @@ import { useMemo, useState, useEffect } from 'react';
 import { useLayout } from 'hooks';
 
 import { RoomService } from 'services';
+import { AiOutlineFlag } from 'react-icons/ai';
+import { FaHandshake } from 'react-icons/fa';
 import { Chat, UserPlay, Board } from './components';
 
 const Room = ({ match }) => {
@@ -31,30 +33,43 @@ const Room = ({ match }) => {
     }
     (async () => {
       const room = await RoomService.getRoomById(roomIdNum, 'public');
-
+      console.log(room.data);
       setRoom(room.data);
     })();
   }, [match.params.id]);
 
   return (
     <Layout>
-      <div className="flex justify-center max-h-full mt-10">
-        <div className="flex flex-col w-80">
-          <UserPlay />
-          <div className="flex-1" />
-          <UserPlay />
-        </div>
+      {room && (
+        <div className="flex justify-center max-h-full mt-10">
+          <div className="flex flex-col w-80">
+            <UserPlay user={room.firstPlayer} />
+            <div className="flex-1 p-4 my-6 bg-gray-100 rounded-lg">
+              <div className="flex flex-row">
+                <button className="flex items-center px-3 py-2 font-medium text-white rounded-md bg-main" type="button">
+                  <FaHandshake className="mr-2" /> Claim a draw
+                </button>
+                <button
+                  className="flex items-center px-3 py-2 ml-4 font-medium text-white rounded-md bg-main"
+                  type="button">
+                  <AiOutlineFlag className="mr-2" /> Resign
+                </button>
+              </div>
+            </div>
+            <UserPlay />
+          </div>
 
-        <div className="flex items-center justify-center h-full px-3 mx-2 rounded-lg bg-board">
-          <div className="play-area">
-            <Board />
+          <div className="flex items-center justify-center h-full px-3 mx-2 rounded-lg bg-board">
+            <div className="play-area">
+              <Board />
+            </div>
+          </div>
+
+          <div className="w-80">
+            <Chat />
           </div>
         </div>
-
-        <div className="w-80">
-          <Chat />
-        </div>
-      </div>
+      )}
     </Layout>
   );
 };

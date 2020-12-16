@@ -288,7 +288,7 @@ button::focus {
 
 .square {
   background: transparent;
-  border: 1px solid #b3d9ff;
+  border: 1px solid #9b9b9b;
   float: left;
   font-size: 24px;
   font-weight: bold;
