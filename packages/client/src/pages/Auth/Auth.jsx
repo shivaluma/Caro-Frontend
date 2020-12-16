@@ -28,7 +28,7 @@ const Login = ({ isLogin = true, location }) => {
         const err = await dispatch(
           signinFacebook({
             id: response.id,
-            fbAccessToken: response.accessToken,
+            fbAccessToken: response.accessToken
           })
         );
         if (!err) onLoginSuccess();
@@ -44,7 +44,7 @@ const Login = ({ isLogin = true, location }) => {
       if (response.accessToken) {
         const err = await dispatch(
           signinGoogle({
-            ggAccessToken: response.accessToken,
+            ggAccessToken: response.accessToken
           })
         );
         if (!err) onLoginSuccess();
@@ -101,7 +101,9 @@ const Login = ({ isLogin = true, location }) => {
                 />
               </div>
 
-              {error && <span className="mt-4 text-xs text-red-600 capitalize text-medium ">{error}</span>}
+              {error && (
+                <span className="mt-4 text-xs text-red-600 capitalize text-medium ">{error}</span>
+              )}
 
               <div className="flex items-center justify-center my-6">
                 <div className="flex-1 border-t border-gray-300" />

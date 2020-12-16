@@ -27,7 +27,7 @@ const LoginForm = ({ changeMode, redirect }) => {
 
       setError('password', {
         type: 'manual',
-        message: err.response.data.message,
+        message: err.response.data.message
       });
       changeLoading();
     }
@@ -46,12 +46,14 @@ const LoginForm = ({ changeMode, redirect }) => {
               errors.name && 'border-red-500'
             )}
             ref={register({
-              required: 'Required',
+              required: 'Required'
             })}
             autoComplete="on"
           />
         </label>
-        {errors.email && <span className="mt-1 text-xs font-medium text-red-600">{errors.email.message}</span>}
+        {errors.email && (
+          <span className="mt-1 text-xs font-medium text-red-600">{errors.email.message}</span>
+        )}
 
         <label className="mt-4" htmlFor="password">
           <span className="px-0 mb-1 text-left tile-structure-name">Password</span>
@@ -64,13 +66,15 @@ const LoginForm = ({ changeMode, redirect }) => {
               errors.password && 'border-red-500'
             )}
             ref={register({
-              required: 'Required',
+              required: 'Required'
             })}
             autoComplete="on"
           />
         </label>
 
-        {errors.password && <span className="mt-1 text-xs font-medium text-red-600">{errors.password.message}</span>}
+        {errors.password && (
+          <span className="mt-1 text-xs font-medium text-red-600">{errors.password.message}</span>
+        )}
 
         <button
           className="mt-8 text-xs font-medium text-white border rounded-lg focus:outline-none bg-background-button"
@@ -81,7 +85,10 @@ const LoginForm = ({ changeMode, redirect }) => {
 
         <span className="mt-6 text-xs text-center text-gray-400">
           Don&apos;t have an account?
-          <button type="button" className="ml-2 text-background-button focus:outline-none" onClick={changeMode}>
+          <button
+            type="button"
+            className="ml-2 text-background-button focus:outline-none"
+            onClick={changeMode}>
             Sign Up
           </button>
         </span>
