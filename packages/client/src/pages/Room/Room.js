@@ -16,6 +16,7 @@ const Room = ({ match }) => {
   // eslint-disable-next-line no-unused-vars
   const [board, setBoard] = useState(new Array(15).fill(new Array(20).fill(null)));
   const [room, setRoom] = useState(null);
+  const [chat, setChat] = useState([]);
   const [next, setNext] = useState(true);
   const [pos, setPos] = useState(null);
   const [userTurn, setUserTurn] = useState(null);
@@ -145,7 +146,7 @@ const Room = ({ match }) => {
           <div key="leftHeader" className="ml-2 text-xl font-medium text-gray-800">
             {match.params.id !== null && `Room #${match.params.id}`}
           </div>
-        )
+        ),
       }),
     [match.params.id]
   );
@@ -171,18 +172,21 @@ const Room = ({ match }) => {
       setNext(!next);
       setUserTurn(user);
     });
+
+    socket.on('new-chat-message', (message) => {
+      setChat((prev) => [...prev, message]);
+    });
   }, []);
 
   useEffect(() => {
     const roomIdNum = Number(match.params.id);
     if (!Number.isInteger(roomIdNum) || roomIdNum < 0 || roomIdNum >= 20) {
-      console.log('tach');
       return;
     }
     (async () => {
       const room = await RoomService.getRoomById(roomIdNum, 'public');
       setRoom(room.data);
-
+      setChat(room?.data?.chats || []);
       socket.emit('join-room', { roomId: roomIdNum, user });
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -190,13 +194,16 @@ const Room = ({ match }) => {
 
   useEffect(() => {
     if (room && user) {
-      console.log(room.firstPlayer);
-
-      setPos(() =>
-        room.firstPlayer?._id === user._id ? 1 : room.secondPlayer?._id === user._id ? 2 : null
-      );
+      setPos(() => (room.firstPlayer?._id === user._id ? 1 : room.secondPlayer?._id === user._id ? 2 : null));
     }
   }, [room, user]);
+
+  const handleSendMessage = useCallback(
+    (content) => {
+      socket.emit('user-send-message', { roomId: match.params.id, user: user.email, content });
+    },
+    [match.params.id, user.email]
+  );
 
   const handleOnUserPickPosition = useCallback(
     (newPos) => {
@@ -227,17 +234,10 @@ const Room = ({ match }) => {
       {room && (
         <div className="flex justify-center max-h-full mt-10">
           <div className="flex flex-col w-80">
-            <UserPlay
-              pos={1}
-              currentUserPos={pos}
-              user={room.firstPlayer}
-              onPickPosition={handleOnUserPickPosition}
-            />
+            <UserPlay pos={1} currentUserPos={pos} user={room.firstPlayer} onPickPosition={handleOnUserPickPosition} />
             <div className="flex-1 p-4 my-6 bg-gray-100 rounded-lg">
               <div className="flex flex-row">
-                <button
-                  className="flex items-center px-3 py-2 font-medium text-white rounded-md bg-main"
-                  type="button">
+                <button className="flex items-center px-3 py-2 font-medium text-white rounded-md bg-main" type="button">
                   <FaHandshake className="mr-2" /> Claim a draw
                 </button>
                 <button
@@ -247,12 +247,7 @@ const Room = ({ match }) => {
                 </button>
               </div>
             </div>
-            <UserPlay
-              pos={2}
-              currentUserPos={pos}
-              user={room.secondPlayer}
-              onPickPosition={handleOnUserPickPosition}
-            />
+            <UserPlay pos={2} currentUserPos={pos} user={room.secondPlayer} onPickPosition={handleOnUserPickPosition} />
           </div>
 
           <div className="flex items-center justify-center h-full px-3 mx-2 rounded-lg bg-board">
@@ -262,7 +257,7 @@ const Room = ({ match }) => {
           </div>
 
           <div className="w-80">
-            <Chat />
+            <Chat messages={chat} onMessageSend={handleSendMessage} />
           </div>
         </div>
       )}
