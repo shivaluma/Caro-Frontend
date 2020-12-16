@@ -1,7 +1,7 @@
 import React from 'react';
 import Square from './Square';
 
-export default function Board() {
+export default function Board(props) {
   const createBoard = () => {
     const temps = [];
     for (let i = 0; i < 15; i++) {
@@ -9,15 +9,19 @@ export default function Board() {
       for (let j = 0; j < 20; j++) {
         temp.push(
           <Square
-
-          // value={props.squares[i * 3 + j]}
-          // onClick={() => props.onClick(i * 3 + j)}
-          // isBold={i * 3 + j === props.boldStep}
-          // isWin={props.winStep.includes(i * 3 + j)}
+            key={i * 15 + j}
+            value={props.board[i][j]}
+            onClick={() => props.onClick(i, j)}
+            // isBold={i * 3 + j === props.boldStep}
+            // isWin={props.winStep.includes(i * 3 + j)}
           />
         );
       }
-      temps.push(<div className="board-row">{temp}</div>);
+      temps.push(
+        <div className="board-row" key={i}>
+          {temp}
+        </div>
+      );
     }
 
     return temps;

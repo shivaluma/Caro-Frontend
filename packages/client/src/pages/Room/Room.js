@@ -14,9 +14,130 @@ const Room = ({ match }) => {
   // const dispatch = useDispatch();
 
   // eslint-disable-next-line no-unused-vars
+  const [board, setBoard] = useState(new Array(15).fill(new Array(20).fill(null)));
   const [room, setRoom] = useState(null);
   const [chat, setChat] = useState([]);
+  const [next, setNext] = useState(true);
   const [pos, setPos] = useState(null);
+  const [userTurn, setUserTurn] = useState(null);
+
+  const user = useSelector((state) => state.user);
+
+  const calculateWin = (i, j, valuee) => {
+    let count = 1;
+    const value = valuee;
+    let row = i;
+    let column = j;
+
+    // check 1
+    while (true) {
+      if (++column > 19) break;
+      if (board[row][column] !== value) break;
+      count++;
+      if (count === 5) return value;
+    }
+
+    row = i;
+    column = j;
+    while (true) {
+      if (--column < 0) break;
+      if (board[row][column] !== value) break;
+      count++;
+      if (count === 5) return value;
+    }
+
+    count = 1;
+    row = i;
+    column = j;
+
+    // check 2
+    while (true) {
+      if (++row > 14) break;
+      if (board[row][column] !== value) break;
+      count++;
+      if (count === 5) return value;
+    }
+
+    row = i;
+    column = j;
+
+    while (true) {
+      if (--row < 0) break;
+      if (board[row][column] !== value) break;
+      count++;
+      if (count === 5) return value;
+    }
+
+    count = 1;
+    row = i;
+    column = j;
+
+    // check 3
+    while (true) {
+      if (++row > 14) break;
+      if (++column > 19) break;
+      if (board[row][column] !== value) break;
+      count++;
+      if (count === 5) return value;
+    }
+
+    row = i;
+    column = j;
+
+    while (true) {
+      if (--row < 0) break;
+      if (--column < 0) break;
+      if (board[row][column] !== value) break;
+      count++;
+      if (count === 5) return value;
+    }
+
+    count = 1;
+    row = i;
+    column = j;
+
+    // check 4
+    while (true) {
+      if (++row > 14) break;
+      if (--column < 0) break;
+      if (board[row][column] !== value) break;
+      count++;
+      if (count === 5) return value;
+    }
+
+    row = i;
+    column = j;
+
+    while (true) {
+      if (--row < 0) break;
+      if (++column > 19) break;
+      if (board[row][column] !== value) break;
+      count++;
+      if (count === 5) return value;
+    }
+
+    return null;
+  };
+
+  const handleTick = async (i, j) => {
+    if (userTurn != null)
+      if (user._id === userTurn._id) {
+        const roomIdNum = Number(match.params.id);
+        const newBoard = board.map((row, indexX) => {
+          if (indexX === i)
+            return row.map((column, indexY) => {
+              if (indexY === j) return next ? 'X' : 'O';
+              return column;
+            });
+          return row;
+        });
+
+        await setBoard([...newBoard]);
+        if (calculateWin(i, j, newBoard[i][j])) alert(calculateWin(i, j, newBoard[i][j]));
+        socket.emit('room-change', { board: newBoard, roomId: roomIdNum, next });
+      }
+  };
+
   const Layout = useMemo(
     () =>
       // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -31,11 +152,7 @@ const Room = ({ match }) => {
   );
 
   useEffect(() => {
-    socket.on('player-change-side', ({ user, roomId, side, leaveSide }) => {
-      console.log(user);
-      console.log(roomId);
-      console.log(side);
-
+    socket.on('player-change-side', ({ user, side, leaveSide, userTurn }) => {
       if (side === 1) {
         setRoom((prev) => ({ ...prev, firstPlayer: user }));
       } else if (side === 2) {
@@ -47,14 +164,19 @@ const Room = ({ match }) => {
       } else if (leaveSide === 2) {
         setRoom((prev) => ({ ...prev, secondPlayer: null }));
       }
+      setUserTurn(userTurn);
+    });
+    socket.on('room-changed', ({ board, next, user }) => {
+      setBoard(board);
+      console.log(user);
+      setNext(!next);
+      setUserTurn(user);
     });
 
     socket.on('new-chat-message', (message) => {
       setChat((prev) => [...prev, message]);
     });
   }, []);
-
-  const user = useSelector((state) => state.user);
 
   useEffect(() => {
     const roomIdNum = Number(match.params.id);
@@ -130,7 +252,7 @@ const Room = ({ match }) => {
 
           <div className="flex items-center justify-center h-full px-3 mx-2 rounded-lg bg-board">
             <div className="play-area">
-              <Board />
+              <Board onClick={(i, j) => handleTick(i, j)} board={board} />
             </div>
           </div>
 
