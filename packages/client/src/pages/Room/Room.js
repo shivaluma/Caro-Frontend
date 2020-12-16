@@ -11,7 +11,121 @@ const Room = ({ match }) => {
   // const dispatch = useDispatch();
 
   // eslint-disable-next-line no-unused-vars
+  const [board, setBoard] = useState(new Array(15).fill(new Array(20).fill(null)));
   const [room, setRoom] = useState(null);
+  const [next, setNext] = useState(true);
+
+  const calculateWin = (i, j, valuee) => {
+    let count = 1;
+    const value = valuee;
+    let row = i;
+    let column = j;
+
+    // check 1
+    while (true) {
+      if (++column > 19) break;
+      if (board[row][column] !== value) break;
+      count++;
+      if (count === 5) return value;
+    }
+
+    row = i;
+    column = j;
+    while (true) {
+      if (--column < 0) break;
+      if (board[row][column] !== value) break;
+      count++;
+      if (count === 5) return value;
+    }
+
+    count = 1;
+    row = i;
+    column = j;
+
+    // check 2
+    while (true) {
+      if (++row > 14) break;
+      if (board[row][column] !== value) break;
+      count++;
+      if (count === 5) return value;
+    }
+
+    row = i;
+    column = j;
+
+    while (true) {
+      if (--row < 0) break;
+      if (board[row][column] !== value) break;
+      count++;
+      if (count === 5) return value;
+    }
+
+    count = 1;
+    row = i;
+    column = j;
+
+    // check 3
+    while (true) {
+      if (++row > 14) break;
+      if (++column > 19) break;
+      if (board[row][column] !== value) break;
+      count++;
+      if (count === 5) return value;
+    }
+
+    row = i;
+    column = j;
+
+    while (true) {
+      if (--row < 0) break;
+      if (--column < 0) break;
+      if (board[row][column] !== value) break;
+      count++;
+      if (count === 5) return value;
+    }
+
+    count = 1;
+    row = i;
+    column = j;
+
+    // check 4
+    while (true) {
+      if (++row > 14) break;
+      if (--column < 0) break;
+      if (board[row][column] !== value) break;
+      count++;
+      if (count === 5) return value;
+    }
+
+    row = i;
+    column = j;
+
+    while (true) {
+      if (--row < 0) break;
+      if (++column > 19) break;
+      if (board[row][column] !== value) break;
+      count++;
+      if (count === 5) return value;
+    }
+
+    return null;
+  };
+
+  const handleTick = async (i, j) => {
+    const newBoard = board.map((row, indexX) => {
+      if (indexX === i)
+        return row.map((column, indexY) => {
+          if (indexY === j) return next ? 'X' : 'O';
+          return column;
+        });
+      return row;
+    });
+
+    await setBoard([...newBoard]);
+    if (calculateWin(i, j, newBoard[i][j])) alert(calculateWin(i, j, newBoard[i][j]));
+    setNext(!next);
+  };
+
   const Layout = useMemo(
     () =>
       // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -20,7 +134,7 @@ const Room = ({ match }) => {
           <div key="leftHeader" className="ml-2 text-xl font-medium text-gray-800">
             {match.params.id !== null && `Room #${match.params.id}`}
           </div>
-        ),
+        )
       }),
     [match.params.id]
   );
@@ -46,7 +160,9 @@ const Room = ({ match }) => {
             <UserPlay user={room.firstPlayer} />
             <div className="flex-1 p-4 my-6 bg-gray-100 rounded-lg">
               <div className="flex flex-row">
-                <button className="flex items-center px-3 py-2 font-medium text-white rounded-md bg-main" type="button">
+                <button
+                  className="flex items-center px-3 py-2 font-medium text-white rounded-md bg-main"
+                  type="button">
                   <FaHandshake className="mr-2" /> Claim a draw
                 </button>
                 <button
@@ -61,7 +177,7 @@ const Room = ({ match }) => {
 
           <div className="flex items-center justify-center h-full px-3 mx-2 rounded-lg bg-board">
             <div className="play-area">
-              <Board />
+              <Board onClick={(i, j) => handleTick(i, j)} board={board} />
             </div>
           </div>
 
