@@ -23,8 +23,8 @@ const userSlice = createSlice({
     removeUser(state) {
       socket.emit('user-offline', state);
       return null;
-    },
-  },
+    }
+  }
 });
 
 export const { setUser, removeUser } = userSlice.actions;
@@ -36,7 +36,7 @@ export default userSlice.reducer;
 export const signin = ({ email, password }) => async (dispatch) => {
   const res = await API.post('auth/signin', {
     email,
-    password,
+    password
   });
   if (res?.data?.data) {
     localStorage.setItem('whatisthis', res.data.data.accessToken);
@@ -77,7 +77,7 @@ export const signup = ({ email, password, confirmPassword }) => async (dispatch)
     const res = await API.post('auth/signup', {
       email,
       password,
-      confirmPassword,
+      confirmPassword
     });
 
     return res;
@@ -111,7 +111,7 @@ export const signout = () => async (dispatch) => {
 export const updateProfile = (displayName) => async (dispatch) => {
   try {
     const res = await API.put('/user', {
-      displayName,
+      displayName
     });
     dispatch(setUser(res.data.data));
     return true;

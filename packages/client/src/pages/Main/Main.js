@@ -53,7 +53,7 @@ const Main = () => {
             </div>
           </div>
         ),
-        right: () => <AddButton handleClick={handleCreateNewRoom} />,
+        right: () => <AddButton handleClick={handleCreateNewRoom} />
       }),
     [rooms.length, handleCreateNewRoom]
   );
@@ -63,7 +63,9 @@ const Main = () => {
       <div className="container flex flex-col mx-auto mt-8">
         <div className="flex flex-wrap w-full mt-8 overflow-y-scroll room-container">
           {rooms?.length > 0 &&
-            rooms.map((room) => <GameButton key={room.roomId} onClick={handleRoomClick} room={room} />)}
+            rooms.map((room) => (
+              <GameButton key={room.roomId} onClick={handleRoomClick} room={room} />
+            ))}
         </div>
       </div>
 

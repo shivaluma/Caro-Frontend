@@ -8,8 +8,8 @@ const loadingSlice = createSlice({
   reducers: {
     toggle(state, action) {
       return !state;
-    },
-  },
+    }
+  }
 });
 
 export const { toggle } = loadingSlice.actions;

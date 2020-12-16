@@ -20,7 +20,8 @@ export default function Chat({ messages, onMessageSend }) {
       <div className="flex flex-col chat-history">
         {messages.map((message, index) => (
           <span key={index} className="mb-3 font-medium">
-            {message.sender} : <span className="text-sm font-normal text-gray-600"> {message.content}</span>
+            {message.sender} :{' '}
+            <span className="text-sm font-normal text-gray-600"> {message.content}</span>
           </span>
         ))}
       </div>
