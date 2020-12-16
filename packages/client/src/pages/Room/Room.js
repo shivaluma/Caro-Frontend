@@ -15,6 +15,7 @@ const Room = ({ match }) => {
 
   // eslint-disable-next-line no-unused-vars
   const [room, setRoom] = useState(null);
+  const [chat, setChat] = useState([]);
   const [pos, setPos] = useState(null);
   const Layout = useMemo(
     () =>
@@ -47,6 +48,10 @@ const Room = ({ match }) => {
         setRoom((prev) => ({ ...prev, secondPlayer: null }));
       }
     });
+
+    socket.on('new-chat-message', (message) => {
+      setChat((prev) => [...prev, message]);
+    });
   }, []);
 
   const user = useSelector((state) => state.user);
@@ -54,13 +59,12 @@ const Room = ({ match }) => {
   useEffect(() => {
     const roomIdNum = Number(match.params.id);
     if (!Number.isInteger(roomIdNum) || roomIdNum < 0 || roomIdNum >= 20) {
-      console.log('tach');
       return;
     }
     (async () => {
       const room = await RoomService.getRoomById(roomIdNum, 'public');
       setRoom(room.data);
-
+      setChat(room?.data?.chats || []);
       socket.emit('join-room', { roomId: roomIdNum, user });
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -68,11 +72,16 @@ const Room = ({ match }) => {
 
   useEffect(() => {
     if (room && user) {
-      console.log(room.firstPlayer);
-
       setPos(() => (room.firstPlayer?._id === user._id ? 1 : room.secondPlayer?._id === user._id ? 2 : null));
     }
   }, [room, user]);
+
+  const handleSendMessage = useCallback(
+    (content) => {
+      socket.emit('user-send-message', { roomId: match.params.id, user: user.email, content });
+    },
+    [match.params.id, user.email]
+  );
 
   const handleOnUserPickPosition = useCallback(
     (newPos) => {
@@ -126,7 +135,7 @@ const Room = ({ match }) => {
           </div>
 
           <div className="w-80">
-            <Chat />
+            <Chat messages={chat} onMessageSend={handleSendMessage} />
           </div>
         </div>
       )}
