@@ -34,7 +34,7 @@ const Room = ({ match }) => {
           <div key="leftHeader" className="ml-2 text-xl font-medium text-gray-800">
             {match.params.id !== null && `Room #${match.params.id}`}
           </div>
-        )
+        ),
       }),
     [match.params.id]
   );
@@ -88,9 +88,7 @@ const Room = ({ match }) => {
 
   useEffect(() => {
     if (room && user) {
-      setPos(() =>
-        room.firstPlayer?._id === user._id ? 1 : room.secondPlayer?._id === user._id ? 2 : null
-      );
+      setPos(() => (room.firstPlayer?._id === user._id ? 1 : room.secondPlayer?._id === user._id ? 2 : null));
     }
   }, [room, user]);
 
@@ -253,7 +251,7 @@ const Room = ({ match }) => {
     socket.emit('room-change', {
       board: new Array(15).fill(new Array(20).fill(null)),
       roomId: roomIdNum,
-      next
+      next,
     });
     setIsModalVisible(false);
   };
@@ -276,9 +274,7 @@ const Room = ({ match }) => {
             />
             <div className="flex-1 p-4 my-6 bg-gray-100 rounded-lg">
               <div className="flex flex-row">
-                <button
-                  className="flex items-center px-3 py-2 font-medium text-white rounded-md bg-main"
-                  type="button">
+                <button className="flex items-center px-3 py-2 font-medium text-white rounded-md bg-main" type="button">
                   <FaHandshake className="mr-2" /> Claim a draw
                 </button>
                 <button
@@ -308,12 +304,7 @@ const Room = ({ match }) => {
           </div>
         </div>
       )}
-      <Modal
-        title="Crepp pro"
-        visible={isModalVisible}
-        onOk={handleOk}
-        okText="Play again"
-        onCancel={handleCancel}>
+      <Modal title="Crepp pro" visible={isModalVisible} onOk={handleOk} okText="Play again" onCancel={handleCancel}>
         <p>Crepp that su rat pro</p>
       </Modal>
     </Layout>
