@@ -13,6 +13,7 @@ import { initUserLoading } from 'slices/user';
 import ProtectedRoute from 'components/ProtectedRoute';
 import { Main, Room } from 'pages';
 import { addItem, removeItem } from 'slices/online';
+import { Profile } from 'pages';
 
 function App() {
   const dispatch = useDispatch();
@@ -56,6 +57,7 @@ function App() {
           <ProtectedRoute exact path="/" component={Main} />
 
           <Route exact path="/login" component={Auth} />
+          <Route path="/profile/:id" component={Profile} />
           <ProtectedRoute path="/:id" component={Room} />
         </Switch>
       </Suspense>

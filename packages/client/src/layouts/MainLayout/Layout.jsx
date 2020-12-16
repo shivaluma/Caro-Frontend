@@ -4,10 +4,10 @@ import Header from './components/Header';
 
 const Layout = ({ children, leftHeader, rightHeader }) => {
   return (
-    <main className="flex flex-col flex-1 h-screen max-h-screen overflow-y-hidden">
+    <main className="flex flex-col flex-1 flex-shrink-0 h-screen max-h-screen overflow-y-hidden">
       <Header leftChild={leftHeader} rightChild={rightHeader} />
       <UpdateProfileModal />
-      {children}
+      <div className="scroll-children">{children}</div>
     </main>
   );
 };

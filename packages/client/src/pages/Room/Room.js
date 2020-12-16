@@ -1,3 +1,4 @@
+/* eslint-disable no-constant-condition */
 /* eslint-disable no-nested-ternary */
 /* eslint-disable react/display-name */
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -250,7 +251,7 @@ const Room = ({ match }) => {
             <UserPlay pos={2} currentUserPos={pos} user={room.secondPlayer} onPickPosition={handleOnUserPickPosition} />
           </div>
 
-          <div className="flex items-center justify-center h-full px-3 mx-2 rounded-lg bg-board">
+          <div className="flex items-center justify-center flex-shrink-0 px-3 mx-2 rounded-lg bg-board">
             <div className="play-area">
               <Board onClick={(i, j) => handleTick(i, j)} board={board} />
             </div>
