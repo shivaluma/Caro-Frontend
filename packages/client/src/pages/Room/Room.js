@@ -18,6 +18,9 @@ const Room = ({ match }) => {
   const [room, setRoom] = useState(null);
   const [next, setNext] = useState(true);
   const [pos, setPos] = useState(null);
+  const [userTurn, setUserTurn] = useState(null);
+
+  const user = useSelector((state) => state.user);
 
   const calculateWin = (i, j, valuee) => {
     let count = 1;
@@ -116,18 +119,21 @@ const Room = ({ match }) => {
   };
 
   const handleTick = async (i, j) => {
-    const newBoard = board.map((row, indexX) => {
-      if (indexX === i)
-        return row.map((column, indexY) => {
-          if (indexY === j) return next ? 'X' : 'O';
-          return column;
-        });
-      return row;
-    });
+    if (user === userTurn) {
+      const roomIdNum = Number(match.params.id);
+      const newBoard = board.map((row, indexX) => {
+        if (indexX === i)
+          return row.map((column, indexY) => {
+            if (indexY === j) return next ? 'X' : 'O';
+            return column;
+          });
+        return row;
+      });
 
-    await setBoard([...newBoard]);
-    if (calculateWin(i, j, newBoard[i][j])) alert(calculateWin(i, j, newBoard[i][j]));
-    setNext(!next);
+      await setBoard([...newBoard]);
+      if (calculateWin(i, j, newBoard[i][j])) alert(calculateWin(i, j, newBoard[i][j]));
+      socket.emit('room-change', { board: newBoard, roomId: roomIdNum, next });
+    }
   };
 
   const Layout = useMemo(
@@ -144,11 +150,7 @@ const Room = ({ match }) => {
   );
 
   useEffect(() => {
-    socket.on('player-change-side', ({ user, roomId, side, leaveSide }) => {
-      console.log(user);
-      console.log(roomId);
-      console.log(side);
-
+    socket.on('player-change-side', ({ user, side, leaveSide }) => {
       if (side === 1) {
         setRoom((prev) => ({ ...prev, firstPlayer: user }));
       } else if (side === 2) {
@@ -161,9 +163,13 @@ const Room = ({ match }) => {
         setRoom((prev) => ({ ...prev, secondPlayer: null }));
       }
     });
+    socket.on('room-changed', (data) => {
+      // console.log(data);
+      setBoard(data.board);
+      setNext(!data.next);
+      setUserTurn(data.user);
+    });
   }, []);
-
-  const user = useSelector((state) => state.user);
 
   useEffect(() => {
     const roomIdNum = Number(match.params.id);
