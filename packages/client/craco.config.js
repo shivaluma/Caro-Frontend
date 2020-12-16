@@ -20,13 +20,16 @@ module.exports = {
           return cracoConfig;
         },
         overrideWebpackConfig: ({ webpackConfig, cracoConfig }) => {
-          if (typeof cracoConfig.disableEslint !== 'undefined' && cracoConfig.disableEslint === true) {
+          if (
+            typeof cracoConfig.disableEslint !== 'undefined' &&
+            cracoConfig.disableEslint === true
+          ) {
             webpackConfig.plugins = webpackConfig.plugins.filter(
               (instance) => instance.constructor.name !== 'ESLintWebpackPlugin'
             );
           }
           return webpackConfig;
-        },
+        }
       },
       options: {
         swcLoaderOptions: {
@@ -37,18 +40,18 @@ module.exports = {
               syntax: 'typescript',
               tsx: true,
               dynamicImport: true,
-              exportDefaultFrom: true,
-            },
-          },
-        },
-      },
-    },
+              exportDefaultFrom: true
+            }
+          }
+        }
+      }
+    }
   ],
 
   style: {
     postcss: {
-      plugins: [require('tailwindcss'), require('autoprefixer')],
-    },
+      plugins: [require('tailwindcss'), require('autoprefixer')]
+    }
   },
   webpack: {
     alias: {},
@@ -56,10 +59,12 @@ module.exports = {
     configure: (webpackConfig, { env, paths }) => {
       const { isFound, match } = getLoader(webpackConfig, loaderByName('babel-loader'));
       if (isFound) {
-        const include = Array.isArray(match.loader.include) ? match.loader.include : [match.loader.include];
+        const include = Array.isArray(match.loader.include)
+          ? match.loader.include
+          : [match.loader.include];
         match.loader.include = include.concat([absolutePath]);
       }
       return webpackConfig;
-    },
-  },
+    }
+  }
 };

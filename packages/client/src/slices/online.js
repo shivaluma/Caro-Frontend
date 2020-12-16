@@ -15,8 +15,8 @@ const loadingSlice = createSlice({
     },
     remove(state, action) {
       return state.filter((el) => el !== action.payload);
-    },
-  },
+    }
+  }
 });
 
 export const { fill, add, remove } = loadingSlice.actions;

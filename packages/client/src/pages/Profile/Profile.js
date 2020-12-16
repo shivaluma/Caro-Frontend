@@ -18,7 +18,7 @@ const Profile = (props) => {
               Profile
             </div>
           </div>
-        ),
+        )
       }),
     []
   );
@@ -80,7 +80,9 @@ const Profile = (props) => {
                   <span className="flex items-center ml-12 font-semibold text-gray-500">
                     VS{' '}
                     <span className="ml-3 text-xl font-bold text-black">
-                      {user._id !== game.firstPlayer._id ? game.firstPlayer.email : game.secondPlayer.email}
+                      {user._id !== game.firstPlayer._id
+                        ? game.firstPlayer.email
+                        : game.secondPlayer.email}
                     </span>
                   </span>
                   <span className="ml-auto text-lg text-gray-700">1 day ago.</span>

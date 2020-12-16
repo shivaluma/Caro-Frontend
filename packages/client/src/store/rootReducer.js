@@ -9,7 +9,7 @@ const rootReducer = combineReducers({
   init: initReducer,
   loading: loadingSlice,
   profile: profileSlice,
-  online: onlineSlice,
+  online: onlineSlice
 });
 
 export default rootReducer;

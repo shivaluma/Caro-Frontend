@@ -45,14 +45,8 @@
         "extensions": [".js", ".jsx"]
       }
     ],
-    "prettier/prettier": [
-      "warn",
-      {
-        "trailingComma": "es5",
-        "singleQuote": true,
-        "printWidth": 120
-      }
-    ]
+    "prettier/prettier": ["error", {}, { "usePrettierrc": true }] // Use our .prettierrc file as source
+   
   },
   "plugins": ["prettier"]
 }
