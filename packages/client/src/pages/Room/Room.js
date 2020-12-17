@@ -1,3 +1,4 @@
+/* eslint-disable no-constant-condition */
 /* eslint-disable no-nested-ternary */
 /* eslint-disable react/display-name */
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -24,6 +25,7 @@ const Room = ({ match }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   const user = useSelector((state) => state.user);
+  const [lastTick, setLastTick] = useState(null);
 
   const Layout = useMemo(
     () =>
@@ -53,16 +55,19 @@ const Room = ({ match }) => {
       }
       setUserTurn(userTurn);
     });
-    socket.on('room-changed', ({ board, next, user }) => {
+    socket.on('room-changed', ({ board, next, user, lastTick }) => {
+      console.log(user);
       setBoard(board);
       setNext(!next);
       setUserTurn(user);
+      setLastTick(lastTick);
     });
 
-    socket.on('game-ended', ({ board, next }) => {
+    socket.on('game-ended', ({ board, next, lastTick }) => {
       setBoard(board);
       setNext(next);
       setUserTurn(null);
+      setLastTick(lastTick);
       showModal();
     });
 
@@ -80,6 +85,12 @@ const Room = ({ match }) => {
       const room = await RoomService.getRoomById(roomIdNum, 'public');
       setRoom(room.data);
       setChat(room?.data?.chats || []);
+      setBoard(room?.data?.board || new Array(15).fill(new Array(20).fill(null)));
+      setUserTurn(room?.data?.userTurn || null);
+      setLastTick(room?.data?.lastTick || null);
+      if (room?.data?.next != null) {
+        setNext(!room.data.next);
+      } else setNext(true);
       socket.emit('join-room', { roomId: roomIdNum, user });
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -220,7 +231,7 @@ const Room = ({ match }) => {
     return null;
   };
 
-  const handleTick = async (i, j) => {
+  const handleTick = (i, j) => {
     if (userTurn != null)
       if (user._id === userTurn._id) {
         const roomIdNum = Number(match.params.id);
@@ -233,12 +244,17 @@ const Room = ({ match }) => {
           return row;
         });
 
-        await setBoard([...newBoard]);
-
+        setBoard([...newBoard]);
+        setLastTick([i, j]);
         if (calculateWin(i, j, newBoard[i][j])) {
-          socket.emit('game-end', { board: newBoard, roomId: roomIdNum, next });
+          socket.emit('game-end', { board: newBoard, roomId: roomIdNum, next, lastTick: [i, j] });
         } else {
-          socket.emit('room-change', { board: newBoard, roomId: roomIdNum, next });
+          socket.emit('room-change', {
+            board: newBoard,
+            roomId: roomIdNum,
+            next,
+            lastTick: [i, j]
+          });
         }
       }
   };
@@ -296,9 +312,9 @@ const Room = ({ match }) => {
             />
           </div>
 
-          <div className="flex items-center justify-center h-full px-3 mx-2 rounded-lg bg-board">
+          <div className="flex items-center justify-center flex-shrink-0 px-3 mx-2 rounded-lg bg-board">
             <div className="play-area">
-              <Board onClick={(i, j) => handleTick(i, j)} board={board} />
+              <Board onClick={(i, j) => handleTick(i, j)} board={board} lastTick={lastTick} />
             </div>
           </div>
 

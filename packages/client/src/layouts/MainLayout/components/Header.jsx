@@ -8,7 +8,7 @@ import UserMenu from './Header/UserMenu';
 
 const Header = ({ leftChild, rightChild }) => {
   return (
-    <div className="flex items-center justify-between w-full h-20 px-6 border-b border-gray-300">
+    <div className="flex items-center justify-between flex-shrink-0 w-full h-20 px-6 border-b border-gray-300">
       <div className="flex items-center">
         <div className="p-3 bg-main rounded-xl">
           <Link to="/">

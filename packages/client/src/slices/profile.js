@@ -5,13 +5,13 @@ import { createSlice } from '@reduxjs/toolkit';
 const profileShowingSlice = createSlice({
   name: 'profileSetting',
   initialState: {
-    showProfile: false,
+    showProfile: false
   },
   reducers: {
     toggle(state, action) {
       return { ...state, showProfile: !state.showProfile };
-    },
-  },
+    }
+  }
 });
 
 export const { toggle } = profileShowingSlice.actions;

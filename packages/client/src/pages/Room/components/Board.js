@@ -12,8 +12,7 @@ export default function Board(props) {
             key={i * 15 + j}
             value={props.board[i][j]}
             onClick={() => props.onClick(i, j)}
-            // isBold={i * 3 + j === props.boldStep}
-            // isWin={props.winStep.includes(i * 3 + j)}
+            lastTick={props.lastTick ? props.lastTick[0] === i && props.lastTick[1] === j : false}
           />
         );
       }

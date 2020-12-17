@@ -24,7 +24,7 @@ const RegisterForm = ({ changeMode }) => {
       response.data.err.fields.forEach((field) =>
         setError(field, {
           type: 'manual',
-          message: response.data.message,
+          message: response.data.message
         })
       );
     } else {
@@ -45,7 +45,7 @@ const RegisterForm = ({ changeMode }) => {
           className="px-3 py-2 text-white rounded-md bg-background-button"
           onClick={changeMode}>
           Back to login
-        </button>,
+        </button>
       ]}
     />
   ) : (
@@ -64,13 +64,15 @@ const RegisterForm = ({ changeMode }) => {
               required: 'Required',
               pattern: {
                 value: /^.{6,}$/i,
-                message: 'email must contain at least 6 characters.',
-              },
+                message: 'email must contain at least 6 characters.'
+              }
             })}
             autoComplete="on"
           />
         </label>
-        {errors.email && <span className="mt-1 text-xs font-medium text-red-600">{errors.email.message}</span>}
+        {errors.email && (
+          <span className="mt-1 text-xs font-medium text-red-600">{errors.email.message}</span>
+        )}
 
         <label className="mt-4" htmlFor="password">
           <span className="px-0 mb-1 text-left tile-structure-name">Password</span>
@@ -86,14 +88,16 @@ const RegisterForm = ({ changeMode }) => {
               required: 'Required',
               pattern: {
                 value: /^.{6,}$/i,
-                message: 'Password must contain at least 6 characters.',
-              },
+                message: 'Password must contain at least 6 characters.'
+              }
             })}
             autoComplete="on"
           />
         </label>
 
-        {errors.password && <span className="mt-1 text-xs font-medium text-red-600">{errors.password.message}</span>}
+        {errors.password && (
+          <span className="mt-1 text-xs font-medium text-red-600">{errors.password.message}</span>
+        )}
 
         <label className="mt-4" htmlFor="confirmPassword">
           <span className="px-0 mb-1 text-left tile-structure-name">Confirm Password</span>
@@ -109,15 +113,17 @@ const RegisterForm = ({ changeMode }) => {
               required: 'Required',
               pattern: {
                 value: /^.{6,}$/i,
-                message: 'Confirm password must contain at least 6 characters.',
-              },
+                message: 'Confirm password must contain at least 6 characters.'
+              }
             })}
             autoComplete="on"
           />
         </label>
 
         {errors.confirmPassword && (
-          <span className="mt-1 text-xs font-medium text-red-600">{errors.confirmPassword.message}</span>
+          <span className="mt-1 text-xs font-medium text-red-600">
+            {errors.confirmPassword.message}
+          </span>
         )}
 
         <button
@@ -129,7 +135,10 @@ const RegisterForm = ({ changeMode }) => {
 
         <span className="mt-6 text-xs text-center text-gray-400">
           Already have an account?
-          <button type="button" className="ml-2 text-background-button focus:outline-none" onClick={changeMode}>
+          <button
+            type="button"
+            className="ml-2 text-background-button focus:outline-none"
+            onClick={changeMode}>
             Login
           </button>
         </span>

@@ -35,13 +35,15 @@ const ProfileForm = ({ handleToggleModal }) => {
               required: 'Required',
               pattern: {
                 value: /^.{10,40}$/i,
-                message: 'Invalid Display Name (at least 10 characters, max 40 characters).',
-              },
+                message: 'Invalid Display Name (at least 10 characters, max 40 characters).'
+              }
             })}
           />
         </label>
         {errors.displayName && (
-          <span className="mt-1 text-xs font-medium text-red-600">{errors.displayName.message}</span>
+          <span className="mt-1 text-xs font-medium text-red-600">
+            {errors.displayName.message}
+          </span>
         )}
 
         <label htmlFor="email">
@@ -63,9 +65,7 @@ const ProfileForm = ({ handleToggleModal }) => {
           type="submit"
           disabled={isLoading}>
           <div className="flex items-center justify-center h-10">
-         
             {isLoading ? <Spin className="mt-1" /> : 'Save'}
-
           </div>
         </button>
       </div>

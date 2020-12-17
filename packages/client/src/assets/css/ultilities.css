@@ -477,3 +477,17 @@ button::focus {
   width: 20vw;
   border-radius: 5px;
 }
+
+.avatar-border {
+  background-image: url('../images/450.png');
+  height: 240px;
+  width: 240px;
+  background-repeat: no-repeat;
+
+  background-size: cover;
+}
+
+.scroll-children {
+  max-height: calc(100% - 80px);
+  overflow-y: scroll;
+}
