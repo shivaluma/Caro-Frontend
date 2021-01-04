@@ -23,11 +23,9 @@ const LoginForm = ({ changeMode, redirect }) => {
       changeLoading();
       redirect();
     } catch (err) {
-      console.log(err.response);
-
       setError('password', {
         type: 'manual',
-        message: err.response.data.message
+        message: err?.response?.data?.message || 'ERR: CONNECTION REFUSED.'
       });
       changeLoading();
     }

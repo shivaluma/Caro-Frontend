@@ -46,7 +46,6 @@
       }
     ],
     "prettier/prettier": ["error", {}, { "usePrettierrc": true }] // Use our .prettierrc file as source
-   
   },
   "plugins": ["prettier"]
 }

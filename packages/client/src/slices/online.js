@@ -13,6 +13,7 @@ const loadingSlice = createSlice({
       if (state.includes(action.payload)) return state;
       return [...state, action.payload];
     },
+
     remove(state, action) {
       return state.filter((el) => el !== action.payload);
     }

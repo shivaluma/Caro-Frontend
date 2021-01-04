@@ -31,7 +31,6 @@ const userSlice = createSlice({
 export const { setUser, removeUser } = userSlice.actions;
 
 export default userSlice.reducer;
-
 // Actions
 
 export const signin = ({ email, password }) => async (dispatch) => {
@@ -41,7 +40,6 @@ export const signin = ({ email, password }) => async (dispatch) => {
   });
   if (res?.data?.data) {
     localStorage.setItem('whatisthis', res.data.data.accessToken);
-
     dispatch(setUser(res.data.data.user));
   }
 };
@@ -98,7 +96,7 @@ export const initUserLoading = () => async (dispatch) => {
 
     return res;
   } catch (e) {
-    console.log(e.response);
+    if (!e.response) return e;
     dispatch(change({ payload: { error: e.response.data.message } }));
     return e.response;
   } finally {
