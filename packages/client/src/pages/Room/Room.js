@@ -135,9 +135,8 @@ const Room = ({ match }) => {
     [user, match.params.id, pos]
   );
 
-  const calculateWin = (i, j, valuee) => {
+  const calculateWin = (i, j, value) => {
     let count = 1;
-    const value = valuee;
     let row = i;
     let column = j;
 
