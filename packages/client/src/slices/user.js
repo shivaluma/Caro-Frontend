@@ -6,6 +6,7 @@ import API from '@caro/common/api';
 import socket from 'configs/socket';
 import { initArray } from 'slices/online';
 import { changeInit } from './init';
+import { change } from './errors';
 
 const userSlice = createSlice({
   name: 'user',
@@ -97,6 +98,8 @@ export const initUserLoading = () => async (dispatch) => {
 
     return res;
   } catch (e) {
+    console.log(e.response);
+    dispatch(change({ payload: { error: e.response.data.message } }));
     return e.response;
   } finally {
     dispatch(changeInit());
