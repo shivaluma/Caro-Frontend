@@ -16,16 +16,20 @@ const Room = ({ match }) => {
   // const dispatch = useDispatch();
 
   // eslint-disable-next-line no-unused-vars
-  const [board, setBoard] = useState(new Array(15).fill(new Array(20).fill(null)));
+
   const [room, setRoom] = useState(null);
   const [chat, setChat] = useState([]);
-  const [next, setNext] = useState(true);
-  const [pos, setPos] = useState(null);
-  const [userTurn, setUserTurn] = useState(null);
+  const [gameData, setGameData] = useState({
+    board: new Array(15).fill(new Array(20).fill(null)),
+    next: true,
+    pos: null,
+    userTurn: null,
+    lastTick: null
+  });
+
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   const user = useSelector((state) => state.user);
-  const [lastTick, setLastTick] = useState(null);
 
   const Layout = useMemo(
     () =>
@@ -53,21 +57,30 @@ const Room = ({ match }) => {
       } else if (leaveSide === 2) {
         setRoom((prev) => ({ ...prev, secondPlayer: null }));
       }
-      setUserTurn(userTurn);
+      setGameData((prev) => ({
+        ...prev,
+        userTurn
+      }));
     });
     socket.on('room-changed', ({ board, next, user, lastTick }) => {
-      console.log(user);
-      setBoard(board);
-      setNext(!next);
-      setUserTurn(user);
-      setLastTick(lastTick);
+      setGameData((prev) => ({
+        ...prev,
+        board,
+        next: !next,
+        userTurn: user,
+        lastTick
+      }));
     });
 
     socket.on('game-ended', ({ board, next, lastTick }) => {
-      setBoard(board);
-      setNext(next);
-      setUserTurn(null);
-      setLastTick(lastTick);
+      setGameData((prev) => ({
+        ...prev,
+        board,
+        next,
+        userTurn: null,
+        lastTick
+      }));
+
       showModal();
     });
 
@@ -85,22 +98,26 @@ const Room = ({ match }) => {
       const room = await RoomService.getRoomById(roomIdNum, 'public');
       setRoom(room.data);
       setChat(room?.data?.chats || []);
-      setBoard(room?.data?.board || new Array(15).fill(new Array(20).fill(null)));
-      setUserTurn(room?.data?.userTurn || null);
-      setLastTick(room?.data?.lastTick || null);
-      if (room?.data?.next != null) {
-        setNext(!room.data.next);
-      } else setNext(true);
+
+      setGameData((prev) => ({
+        ...prev,
+        board: room?.data?.board || new Array(15).fill(new Array(20).fill(null)),
+        next: room?.data?.next != null ? !room.data.next : true,
+        userTurn: room?.data?.userTurn || null,
+        lastTick: room?.data?.lastTick || null
+      }));
+
       socket.emit('join-room', { roomId: roomIdNum, user });
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line
   }, [match.params.id]);
 
   useEffect(() => {
     if (room && user) {
-      setPos(() =>
-        room.firstPlayer?._id === user._id ? 1 : room.secondPlayer?._id === user._id ? 2 : null
-      );
+      setGameData((prev) => ({
+        ...prev,
+        pos: room.firstPlayer?._id === user._id ? 1 : room.secondPlayer?._id === user._id ? 2 : null
+      }));
     }
   }, [room, user]);
 
@@ -116,11 +133,17 @@ const Room = ({ match }) => {
       if (!match.params.id) return;
       if (newPos === 1) {
         setRoom((prev) => ({ ...prev, firstPlayer: user }));
-        setPos(() => 1);
+        setGameData((prev) => ({
+          ...prev,
+          pos: 1
+        }));
         socket.emit('change-side', { roomId: match.params.id, user, side: 1 });
       } else if (newPos === 2) {
         setRoom((prev) => ({ ...prev, secondPlayer: user }));
-        setPos(() => 2);
+        setGameData((prev) => ({
+          ...prev,
+          pos: 2
+        }));
         socket.emit('change-side', { roomId: match.params.id, user, side: 2 });
       } else {
         if (pos === 1) {
@@ -128,18 +151,21 @@ const Room = ({ match }) => {
         } else if (pos === 2) {
           setRoom((prev) => ({ ...prev, secondPlayer: null }));
         }
-        setPos(() => null);
+        setGameData((prev) => ({
+          ...prev,
+          pos: null
+        }));
         socket.emit('change-side', { roomId: match.params.id, user, side: null });
       }
     },
-    [user, match.params.id, pos]
+    [user, match.params.id]
   );
 
   const calculateWin = (i, j, value) => {
     let count = 1;
     let row = i;
     let column = j;
-
+    const { board } = gameData;
     // check 1
     while (true) {
       if (++column > 19) break;
@@ -231,27 +257,37 @@ const Room = ({ match }) => {
   };
 
   const handleTick = (i, j) => {
-    if (userTurn != null)
-      if (user._id === userTurn._id) {
+    if (gameData.userTurn !== null)
+      if (user._id === gameData.userTurn._id) {
         const roomIdNum = Number(match.params.id);
-        const newBoard = board.map((row, indexX) => {
+        const newBoard = gameData.board.map((row, indexX) => {
           if (indexX === i)
             return row.map((column, indexY) => {
-              if (indexY === j) return next ? 'X' : 'O';
+              if (indexY === j) return gameData.next ? 'X' : 'O';
               return column;
             });
           return row;
         });
 
-        setBoard([...newBoard]);
-        setLastTick([i, j]);
+        setGameData((prev) => ({
+          ...prev,
+          board: newBoard,
+
+          lastTick: [i, j]
+        }));
+
         if (calculateWin(i, j, newBoard[i][j])) {
-          socket.emit('game-end', { board: newBoard, roomId: roomIdNum, next, lastTick: [i, j] });
+          socket.emit('game-end', {
+            board: newBoard,
+            roomId: roomIdNum,
+            next: gameData.next,
+            lastTick: [i, j]
+          });
         } else {
           socket.emit('room-change', {
             board: newBoard,
             roomId: roomIdNum,
-            next,
+            next: gameData.next,
             lastTick: [i, j]
           });
         }
@@ -267,7 +303,7 @@ const Room = ({ match }) => {
     socket.emit('room-change', {
       board: new Array(15).fill(new Array(20).fill(null)),
       roomId: roomIdNum,
-      next
+      next: gameData.next
     });
     setIsModalVisible(false);
   };
@@ -283,10 +319,10 @@ const Room = ({ match }) => {
           <div className="flex flex-col w-80">
             <UserPlay
               pos={1}
-              currentUserPos={pos}
+              currentUserPos={gameData.pos}
               user={room.firstPlayer}
               onPickPosition={handleOnUserPickPosition}
-              next={next}
+              next={gameData.next}
             />
             <div className="flex-1 p-4 my-6 bg-gray-100 rounded-lg">
               <div className="flex flex-row">
@@ -304,16 +340,20 @@ const Room = ({ match }) => {
             </div>
             <UserPlay
               pos={2}
-              currentUserPos={pos}
+              currentUserPos={gameData.pos}
               user={room.secondPlayer}
               onPickPosition={handleOnUserPickPosition}
-              next={next}
+              next={gameData.next}
             />
           </div>
 
           <div className="flex items-center justify-center flex-shrink-0 px-3 mx-2 rounded-lg bg-board">
             <div className="play-area">
-              <Board onClick={(i, j) => handleTick(i, j)} board={board} lastTick={lastTick} />
+              <Board
+                onClick={(i, j) => handleTick(i, j)}
+                board={gameData.board}
+                lastTick={gameData.lastTick}
+              />
             </div>
           </div>
 
