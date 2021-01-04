@@ -1,7 +1,8 @@
 import { useState } from 'react';
 
-export default function Chat({ messages, onMessageSend }) {
+export default function Chat({ messages, onMessageSend, endRef }) {
   const [currentValue, setCurrentValue] = useState('');
+
   const handleSendMessage = (event) => {
     event.preventDefault();
     const value = currentValue;
@@ -24,6 +25,8 @@ export default function Chat({ messages, onMessageSend }) {
             <span className="text-sm font-normal text-gray-600"> {message.content}</span>
           </span>
         ))}
+
+        <div ref={endRef} />
       </div>
 
       <form className="clearfix chat-message" onSubmit={handleSendMessage}>

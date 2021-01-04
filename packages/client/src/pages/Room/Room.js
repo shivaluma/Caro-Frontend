@@ -1,7 +1,7 @@
 /* eslint-disable no-constant-condition */
 /* eslint-disable no-nested-ternary */
 /* eslint-disable react/display-name */
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { useLayout } from 'hooks';
 
 import { RoomService } from 'services';
@@ -10,13 +10,14 @@ import { FaHandshake } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import socket from 'configs/socket';
 import { Modal } from 'antd';
+import calculateWin from 'utils/calculateWin';
 import { Chat, UserPlay, Board } from './components';
 
 const Room = ({ match }) => {
   // const dispatch = useDispatch();
 
   // eslint-disable-next-line no-unused-vars
-
+  const messageRef = useRef(null);
   const [room, setRoom] = useState(null);
   const [chat, setChat] = useState([]);
   const [gameData, setGameData] = useState({
@@ -86,6 +87,8 @@ const Room = ({ match }) => {
 
     socket.on('new-chat-message', (message) => {
       setChat((prev) => [...prev, message]);
+      if (!messageRef.current) return;
+      messageRef.current.scrollIntoView({ behavior: 'smooth' });
     });
   }, []);
 
@@ -161,101 +164,6 @@ const Room = ({ match }) => {
     [user, match.params.id]
   );
 
-  const calculateWin = (i, j, value) => {
-    let count = 1;
-    let row = i;
-    let column = j;
-    const { board } = gameData;
-    // check 1
-    while (true) {
-      if (++column > 19) break;
-      if (board[row][column] !== value) break;
-      count++;
-      if (count === 5) return value;
-    }
-
-    row = i;
-    column = j;
-    while (true) {
-      if (--column < 0) break;
-      if (board[row][column] !== value) break;
-      count++;
-      if (count === 5) return value;
-    }
-
-    count = 1;
-    row = i;
-    column = j;
-
-    // check 2
-    while (true) {
-      if (++row > 14) break;
-      if (board[row][column] !== value) break;
-      count++;
-      if (count === 5) return value;
-    }
-
-    row = i;
-    column = j;
-
-    while (true) {
-      if (--row < 0) break;
-      if (board[row][column] !== value) break;
-      count++;
-      if (count === 5) return value;
-    }
-
-    count = 1;
-    row = i;
-    column = j;
-
-    // check 3
-    while (true) {
-      if (++row > 14) break;
-      if (++column > 19) break;
-      if (board[row][column] !== value) break;
-      count++;
-      if (count === 5) return value;
-    }
-
-    row = i;
-    column = j;
-
-    while (true) {
-      if (--row < 0) break;
-      if (--column < 0) break;
-      if (board[row][column] !== value) break;
-      count++;
-      if (count === 5) return value;
-    }
-
-    count = 1;
-    row = i;
-    column = j;
-
-    // check 4
-    while (true) {
-      if (++row > 14) break;
-      if (--column < 0) break;
-      if (board[row][column] !== value) break;
-      count++;
-      if (count === 5) return value;
-    }
-
-    row = i;
-    column = j;
-
-    while (true) {
-      if (--row < 0) break;
-      if (++column > 19) break;
-      if (board[row][column] !== value) break;
-      count++;
-      if (count === 5) return value;
-    }
-
-    return null;
-  };
-
   const handleTick = (i, j) => {
     if (gameData.userTurn !== null)
       if (user._id === gameData.userTurn._id) {
@@ -276,7 +184,7 @@ const Room = ({ match }) => {
           lastTick: [i, j]
         }));
 
-        if (calculateWin(i, j, newBoard[i][j])) {
+        if (calculateWin(i, j, newBoard[i][j], newBoard)) {
           socket.emit('game-end', {
             board: newBoard,
             roomId: roomIdNum,
@@ -358,7 +266,7 @@ const Room = ({ match }) => {
           </div>
 
           <div className="w-80">
-            <Chat messages={chat} onMessageSend={handleSendMessage} />
+            <Chat messages={chat} endRef={messageRef} onMessageSend={handleSendMessage} />
           </div>
         </div>
       )}
