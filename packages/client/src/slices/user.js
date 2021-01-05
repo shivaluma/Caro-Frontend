@@ -38,6 +38,7 @@ export const signin = ({ email, password }) => async (dispatch) => {
     email,
     password
   });
+
   if (res?.data?.data) {
     localStorage.setItem('whatisthis', res.data.data.accessToken);
     dispatch(setUser(res.data.data.user));
@@ -89,6 +90,7 @@ export const initUserLoading = () => async (dispatch) => {
   try {
     const res = await API.get('user/me');
     const onlines = await API.get('user/online');
+
     if (res?.data?.data) {
       await dispatch(setUser(res.data.data));
     }

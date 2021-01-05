@@ -2,6 +2,7 @@ import React from 'react';
 
 import { GiTicTacToe } from 'react-icons/gi';
 import { MdLock } from 'react-icons/md';
+import { FiUser } from 'react-icons/fi';
 // import dayjs from 'utils/dayjs';
 // import { IoPlayForward } from 'react-icons/io5';
 
@@ -27,6 +28,11 @@ const GameButton = ({ onClick, room, hasPassword = true, hasStarted = true }) =>
             <GiTicTacToe />
           </div>
           {hasPassword && hasStarted && <MdLock className="text-xl text-white right-icon" />}
+          {room.firstPlayer && <FiUser className="text-xl font-semibold text-white user-icon" />}
+          {room.secondPlayer && (
+            <FiUser className="text-xl font-semibold text-white user-icon right-icon" />
+          )}
+
           {/* {hasStarted && <IoPlayForward className="text-xl text-white left-icon" />} */}
         </div>
         <span className="tile-structure-name">#{room.roomId}</span>
