@@ -4,7 +4,7 @@ import { Avatar } from 'antd';
 import { ImTrophy } from 'react-icons/im';
 import { FiLogOut } from 'react-icons/fi';
 
-export default function UserPlay({ user, pos, onPickPosition, currentUserPos, next }) {
+export default function UserPlay({ user, pos, onPickPosition, currentUserPos, next, canLeave }) {
   return (
     <div
       className={`relative flex flex-col items-center justify-center w-full h-64 bg-gray-100 border-pink-500 rounded-md ${
@@ -12,7 +12,7 @@ export default function UserPlay({ user, pos, onPickPosition, currentUserPos, ne
       }`}>
       {user ? (
         <>
-          {currentUserPos === pos && (
+          {canLeave && currentUserPos === pos && (
             <button
               className="absolute w-5 h-5 top-5 right-3 right-pane focus:outline-none"
               type="button"

@@ -25,7 +25,8 @@ const Room = ({ match }) => {
     next: true,
     pos: null,
     userTurn: null,
-    lastTick: null
+    lastTick: null,
+    started: false
   });
 
   const [countdown, setCountdown] = useState(null);
@@ -94,6 +95,11 @@ const Room = ({ match }) => {
         lastTick
       }));
 
+      setUserAccepter(() => ({
+        firstPlayer: false,
+        secondPlayer: false
+      }));
+
       showModal();
     });
 
@@ -111,15 +117,23 @@ const Room = ({ match }) => {
     }
     (async () => {
       const room = await RoomService.getRoomById(roomIdNum, 'public');
-      setRoom(room.data);
+      console.log(room);
+      setRoom(() => room.data);
       setChat(room?.data?.chats || []);
 
+      const next = room?.data?.next != null ? !room.data.next : true;
       setGameData((prev) => ({
         ...prev,
         board: room?.data?.board || new Array(20).fill(new Array(20).fill(null)),
-        next: room?.data?.next != null ? !room.data.next : true,
-        userTurn: room?.data?.userTurn || null,
-        lastTick: room?.data?.lastTick || null
+        next,
+        userTurn: !next ? room?.data?.firstPlayer : room?.data?.secondPlayer,
+        lastTick: room?.data?.lastTick || null,
+        started: room?.data?.started || false
+      }));
+
+      setUserAccepter(() => ({
+        firstPlayer: room?.data?.ready?.firstPlayer || false,
+        secondPlayer: room?.data?.ready?.secondPlayer || false
       }));
 
       socket.emit('join-room', { roomId: roomIdNum, user });
@@ -135,6 +149,12 @@ const Room = ({ match }) => {
       }));
     }
   }, [room, user]);
+
+  useEffect(() => {
+    if (userAccepter.firstPlayer && userAccepter.secondPlayer) {
+      setCountdown(() => 0);
+    }
+  }, [userAccepter]);
 
   const handleSendMessage = useCallback(
     (content) => {
@@ -176,8 +196,10 @@ const Room = ({ match }) => {
     [user, match.params.id, gameData.pos]
   );
 
-  const handleTick = (i, j) => {
-    if (gameData.userTurn !== null)
+  const handleTick = async (i, j) => {
+    console.log(gameData);
+    console.log(user);
+    if (gameData.userTurn)
       if (user._id === gameData.userTurn._id) {
         const roomIdNum = Number(match.params.id);
         const newBoard = gameData.board.map((row, indexX) => {
@@ -196,7 +218,11 @@ const Room = ({ match }) => {
           lastTick: [i, j]
         }));
 
-        if (calculateWin(i, j, newBoard[i][j], newBoard)) {
+        if (await calculateWin(i, j, newBoard[i][j], newBoard)) {
+          setUserAccepter(() => ({
+            firstPlayer: false,
+            secondPlayer: false
+          }));
           socket.emit('game-end', {
             board: newBoard,
             roomId: roomIdNum,
@@ -244,7 +270,12 @@ const Room = ({ match }) => {
   }
 
   if (gameData.pos) {
-    if (room.firstPlayer && room.secondPlayer && (!countdown || countdown === 0)) {
+    if (
+      room.firstPlayer &&
+      room.secondPlayer &&
+      !userAccepter.firstPlayer &&
+      !userAccepter.secondPlayer
+    ) {
       indicator =
         room.firstPlayer._id === user._id ? (
           <button
@@ -261,10 +292,6 @@ const Room = ({ match }) => {
             Start game
           </button>
         );
-    } else {
-      indicator = (
-        <div className="p-2 text-sm text-white bg-red-500 center-absolute">Waiting for player</div>
-      );
     }
 
     if (
@@ -276,10 +303,9 @@ const Room = ({ match }) => {
           (00:{countdown} (waiting for confirm)
         </div>
       );
-    }
-    if (
-      (gameData.pos === 1 && !userAccepter.firstPlayer) ||
-      (gameData.pos === 2 && !userAccepter.secondPlayer)
+    } else if (
+      (!userAccepter.firstPlayer && gameData.pos === 1 && userAccepter.secondPlayer) ||
+      (!userAccepter.secondPlayer && gameData.pos === 2 && userAccepter.firstPlayer)
     ) {
       indicator = (
         <button
@@ -294,6 +320,25 @@ const Room = ({ match }) => {
     if (userAccepter.firstPlayer && userAccepter.secondPlayer) {
       indicator = null;
     }
+
+    if (gameData.pos === 1) {
+      if (room.secondPlayer === null) {
+        indicator = (
+          <div className="p-2 text-sm text-white bg-red-500 center-absolute">
+            Waiting for player
+          </div>
+        );
+      }
+    }
+    if (gameData.pos === 2) {
+      if (room.firstPlayer === null) {
+        indicator = (
+          <div className="p-2 text-sm text-white bg-red-500 center-absolute">
+            Waiting for player
+          </div>
+        );
+      }
+    }
   }
 
   return (
@@ -305,6 +350,7 @@ const Room = ({ match }) => {
               pos={1}
               currentUserPos={gameData.pos}
               user={room.firstPlayer}
+              canLeave={!userAccepter.firstPlayer}
               onPickPosition={handleOnUserPickPosition}
               next={gameData.next}
             />
@@ -326,6 +372,7 @@ const Room = ({ match }) => {
               pos={2}
               currentUserPos={gameData.pos}
               user={room.secondPlayer}
+              canLeave={!userAccepter.secondPlayer}
               onPickPosition={handleOnUserPickPosition}
               next={gameData.next}
             />

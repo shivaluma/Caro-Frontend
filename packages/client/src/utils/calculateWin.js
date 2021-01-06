@@ -1,4 +1,4 @@
-const calculateWin = (i, j, value, board) => {
+const calculateWin = async (i, j, value, board) => {
   let count = 1;
   let row = i;
   let column = j;
