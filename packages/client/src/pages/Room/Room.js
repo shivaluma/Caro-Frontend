@@ -9,8 +9,8 @@ import { AiOutlineFlag } from 'react-icons/ai';
 import { FaHandshake } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import socket from 'configs/socket';
-import { Modal } from 'antd';
 import calculateWin from 'utils/calculateWin';
+import { Modal } from 'antd';
 import { Chat, UserPlay, Board } from './components';
 
 const Room = ({ match }) => {
@@ -20,6 +20,7 @@ const Room = ({ match }) => {
   const messageRef = useRef(null);
   const [room, setRoom] = useState(null);
   const [chat, setChat] = useState([]);
+  const [winner, setWinner] = useState(null);
   const [gameData, setGameData] = useState({
     board: new Array(20).fill(new Array(20).fill(null)),
     next: true,
@@ -31,10 +32,24 @@ const Room = ({ match }) => {
 
   const [countdown, setCountdown] = useState(null);
   const [userAccepter, setUserAccepter] = useState({ firstPlayer: false, secondPlayer: false });
-
+  const user = useSelector((state) => state.user);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
-  const user = useSelector((state) => state.user);
+  const handleOk = () => {
+    // const roomIdNum = Number(match.params.id);
+    // socket.emit('game-end', {
+    //   board: gameData.board,
+    //   roomId: roomIdNum,
+    //   next: gameData.next,
+    //   lastTick: null,
+    //   win: user
+    // });
+    setIsModalVisible(false);
+  };
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
+  };
 
   const Layout = useMemo(
     () =>
@@ -94,13 +109,17 @@ const Room = ({ match }) => {
         userTurn: null,
         lastTick
       }));
+      setWinner(lastTick === 'O' ? 'Player 1' : 'Player 2');
 
       setUserAccepter(() => ({
         firstPlayer: false,
         secondPlayer: false
       }));
+    });
 
-      showModal();
+    socket.on('claim-draw-cli', ({ test }) => {
+      console.log(test);
+      setIsModalVisible(true);
     });
 
     socket.on('new-chat-message', (message) => {
@@ -117,7 +136,6 @@ const Room = ({ match }) => {
     }
     (async () => {
       const room = await RoomService.getRoomById(roomIdNum, 'public');
-      console.log(room);
       setRoom(() => room.data);
       setChat(room?.data?.chats || []);
 
@@ -197,8 +215,6 @@ const Room = ({ match }) => {
   );
 
   const handleTick = async (i, j) => {
-    console.log(gameData);
-    console.log(user);
     if (gameData.userTurn)
       if (user._id === gameData.userTurn._id) {
         const roomIdNum = Number(match.params.id);
@@ -240,25 +256,13 @@ const Room = ({ match }) => {
       }
   };
 
-  const showModal = () => {
-    setIsModalVisible(true);
-  };
-
-  const handleOk = () => {
+  const handlePressStartGame = () => {
     const roomIdNum = Number(match.params.id);
     socket.emit('room-change', {
       board: new Array(20).fill(new Array(20).fill(null)),
       roomId: roomIdNum,
       next: gameData.next
     });
-    setIsModalVisible(false);
-  };
-
-  const handleCancel = () => {
-    setIsModalVisible(false);
-  };
-
-  const handlePressStartGame = () => {
     socket.emit('press-start', { roomId: match.params.id, pos: gameData.pos });
   };
 
@@ -282,14 +286,14 @@ const Room = ({ match }) => {
             onClick={handlePressStartGame}
             type="button"
             className="p-2 text-sm text-white bg-red-500 center-absolute">
-            Start game
+            {`${winner ? `${winner} win \n` : ''} Start game`}
           </button>
         ) : (
           <button
             onClick={handlePressStartGame}
             type="button"
             className="p-2 text-sm text-white bg-red-500 center-absolute">
-            Start game
+            {`${winner ? `${winner} win \n` : ''} Start game`}
           </button>
         );
     }
@@ -341,6 +345,21 @@ const Room = ({ match }) => {
     }
   }
 
+  const handleClaimDraw = () => {
+    socket.emit('claim-draw', { roomId: match.params.id });
+  };
+
+  const handleResign = () => {
+    const roomIdNum = Number(match.params.id);
+    socket.emit('game-end', {
+      board: gameData.board,
+      roomId: roomIdNum,
+      next: gameData.next,
+      lastTick: null,
+      lose: user
+    });
+  };
+
   return (
     <Layout>
       {room && (
@@ -358,12 +377,14 @@ const Room = ({ match }) => {
               <div className="flex flex-row">
                 <button
                   className="flex items-center px-3 py-2 font-medium text-white rounded-md bg-main"
-                  type="button">
+                  type="button"
+                  onClick={indicator ? null : handleClaimDraw}>
                   <FaHandshake className="mr-2" /> Claim a draw
                 </button>
                 <button
                   className="flex items-center px-3 py-2 ml-4 font-medium text-white rounded-md bg-main"
-                  type="button">
+                  type="button"
+                  onClick={handleResign}>
                   <AiOutlineFlag className="mr-2" /> Resign
                 </button>
               </div>
@@ -393,16 +414,17 @@ const Room = ({ match }) => {
           <div className="w-80">
             <Chat messages={chat} endRef={messageRef} onMessageSend={handleSendMessage} />
           </div>
+          <Modal
+            title="Basic Modal"
+            visible={isModalVisible}
+            onOk={handleOk}
+            onCancel={handleCancel}>
+            <p>Some contents...</p>
+            <p>Some contents...</p>
+            <p>Some contents...</p>
+          </Modal>
         </div>
       )}
-      <Modal
-        title="Crepp pro"
-        visible={isModalVisible}
-        onOk={handleOk}
-        okText="Play again"
-        onCancel={handleCancel}>
-        <p>Crepp that su rat pro</p>
-      </Modal>
     </Layout>
   );
 };
