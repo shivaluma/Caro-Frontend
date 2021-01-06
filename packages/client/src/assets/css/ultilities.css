@@ -290,15 +290,16 @@ button::focus {
   background: transparent;
   border: 1px solid #9b9b9b;
   float: left;
-  font-size: 24px;
+  font-size: 18px;
   font-weight: bold;
-  line-height: 34px;
-  height: 34px;
+  line-height: 28px;
+  height: 28px;
+
   margin-right: -1px;
   margin-top: -1px;
   padding: 0;
   text-align: center;
-  width: 34px;
+  width: 28px;
 }
 
 .board-row:after {
@@ -490,4 +491,53 @@ button::focus {
 .scroll-children {
   max-height: calc(100% - 80px);
   overflow-y: scroll;
+}
+
+@media (max-width: 1700px) {
+  .square {
+  }
+}
+
+@media only screen and (max-width: 1366px) {
+  .square {
+    width: 25px;
+    height: 25px;
+    font-size: 18px;
+    line-height: 25px;
+  }
+}
+
+@media only screen and (max-width: 900px) {
+  .square {
+    width: 20px;
+    height: 20px;
+    font-size: 14px;
+    line-height: 20px;
+  }
+}
+
+.user-icon {
+  position: absolute;
+  left: 7%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.right-icon {
+  left: auto;
+  right: 7%;
+}
+
+.center-absolute {
+  transform: translate(-50%, -50%);
+}
+
+.center-absolute.ant-spin-dot {
+  margin: 0;
+  width: auto;
+  height: auto;
+}
+
+.ant-spin.ant-spin-spinning {
+  max-height: 99999px !important;
 }

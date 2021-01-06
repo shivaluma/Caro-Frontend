@@ -3,7 +3,7 @@
 /* eslint-disable react/display-name */
 import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { useLayout } from 'hooks';
-
+import { Spin } from 'antd';
 import { RoomService } from 'services';
 import { AiOutlineFlag } from 'react-icons/ai';
 import { FaHandshake } from 'react-icons/fa';
@@ -21,12 +21,16 @@ const Room = ({ match }) => {
   const [room, setRoom] = useState(null);
   const [chat, setChat] = useState([]);
   const [gameData, setGameData] = useState({
-    board: new Array(15).fill(new Array(20).fill(null)),
+    board: new Array(20).fill(new Array(20).fill(null)),
     next: true,
     pos: null,
     userTurn: null,
-    lastTick: null
+    lastTick: null,
+    started: false
   });
+
+  const [countdown, setCountdown] = useState(null);
+  const [userAccepter, setUserAccepter] = useState({ firstPlayer: false, secondPlayer: false });
 
   const [isModalVisible, setIsModalVisible] = useState(false);
 
@@ -73,6 +77,15 @@ const Room = ({ match }) => {
       }));
     });
 
+    socket.on('press-start', ({ pos }) => {
+      if (pos === 1) {
+        setUserAccepter((prev) => ({ ...prev, firstPlayer: true }));
+      } else {
+        setUserAccepter((prev) => ({ ...prev, secondPlayer: true }));
+      }
+      setCountdown(() => 10);
+    });
+
     socket.on('game-ended', ({ board, next, lastTick }) => {
       setGameData((prev) => ({
         ...prev,
@@ -80,6 +93,11 @@ const Room = ({ match }) => {
         next,
         userTurn: null,
         lastTick
+      }));
+
+      setUserAccepter(() => ({
+        firstPlayer: false,
+        secondPlayer: false
       }));
 
       showModal();
@@ -99,15 +117,23 @@ const Room = ({ match }) => {
     }
     (async () => {
       const room = await RoomService.getRoomById(roomIdNum, 'public');
-      setRoom(room.data);
+      console.log(room);
+      setRoom(() => room.data);
       setChat(room?.data?.chats || []);
 
+      const next = room?.data?.next != null ? !room.data.next : true;
       setGameData((prev) => ({
         ...prev,
-        board: room?.data?.board || new Array(15).fill(new Array(20).fill(null)),
-        next: room?.data?.next != null ? !room.data.next : true,
-        userTurn: room?.data?.userTurn || null,
-        lastTick: room?.data?.lastTick || null
+        board: room?.data?.board || new Array(20).fill(new Array(20).fill(null)),
+        next,
+        userTurn: !next ? room?.data?.firstPlayer : room?.data?.secondPlayer,
+        lastTick: room?.data?.lastTick || null,
+        started: room?.data?.started || false
+      }));
+
+      setUserAccepter(() => ({
+        firstPlayer: room?.data?.ready?.firstPlayer || false,
+        secondPlayer: room?.data?.ready?.secondPlayer || false
       }));
 
       socket.emit('join-room', { roomId: roomIdNum, user });
@@ -123,6 +149,12 @@ const Room = ({ match }) => {
       }));
     }
   }, [room, user]);
+
+  useEffect(() => {
+    if (userAccepter.firstPlayer && userAccepter.secondPlayer) {
+      setCountdown(() => 0);
+    }
+  }, [userAccepter]);
 
   const handleSendMessage = useCallback(
     (content) => {
@@ -149,9 +181,9 @@ const Room = ({ match }) => {
         }));
         socket.emit('change-side', { roomId: match.params.id, user, side: 2 });
       } else {
-        if (pos === 1) {
+        if (gameData.pos === 1) {
           setRoom((prev) => ({ ...prev, firstPlayer: null }));
-        } else if (pos === 2) {
+        } else if (gameData.pos === 2) {
           setRoom((prev) => ({ ...prev, secondPlayer: null }));
         }
         setGameData((prev) => ({
@@ -161,11 +193,13 @@ const Room = ({ match }) => {
         socket.emit('change-side', { roomId: match.params.id, user, side: null });
       }
     },
-    [user, match.params.id]
+    [user, match.params.id, gameData.pos]
   );
 
-  const handleTick = (i, j) => {
-    if (gameData.userTurn !== null)
+  const handleTick = async (i, j) => {
+    console.log(gameData);
+    console.log(user);
+    if (gameData.userTurn)
       if (user._id === gameData.userTurn._id) {
         const roomIdNum = Number(match.params.id);
         const newBoard = gameData.board.map((row, indexX) => {
@@ -184,7 +218,11 @@ const Room = ({ match }) => {
           lastTick: [i, j]
         }));
 
-        if (calculateWin(i, j, newBoard[i][j], newBoard)) {
+        if (await calculateWin(i, j, newBoard[i][j], newBoard)) {
+          setUserAccepter(() => ({
+            firstPlayer: false,
+            secondPlayer: false
+          }));
           socket.emit('game-end', {
             board: newBoard,
             roomId: roomIdNum,
@@ -209,7 +247,7 @@ const Room = ({ match }) => {
   const handleOk = () => {
     const roomIdNum = Number(match.params.id);
     socket.emit('room-change', {
-      board: new Array(15).fill(new Array(20).fill(null)),
+      board: new Array(20).fill(new Array(20).fill(null)),
       roomId: roomIdNum,
       next: gameData.next
     });
@@ -220,6 +258,89 @@ const Room = ({ match }) => {
     setIsModalVisible(false);
   };
 
+  const handlePressStartGame = () => {
+    socket.emit('press-start', { roomId: match.params.id, pos: gameData.pos });
+  };
+
+  let indicator = null; //
+  if (gameData.pos === null) {
+    indicator = (
+      <div className="p-2 text-sm text-white bg-red-500 center-absolute">Pick a position</div>
+    );
+  }
+
+  if (gameData.pos) {
+    if (
+      room.firstPlayer &&
+      room.secondPlayer &&
+      !userAccepter.firstPlayer &&
+      !userAccepter.secondPlayer
+    ) {
+      indicator =
+        room.firstPlayer._id === user._id ? (
+          <button
+            onClick={handlePressStartGame}
+            type="button"
+            className="p-2 text-sm text-white bg-red-500 center-absolute">
+            Start game
+          </button>
+        ) : (
+          <button
+            onClick={handlePressStartGame}
+            type="button"
+            className="p-2 text-sm text-white bg-red-500 center-absolute">
+            Start game
+          </button>
+        );
+    }
+
+    if (
+      (gameData.pos === 1 && userAccepter.firstPlayer) ||
+      (gameData.pos === 2 && userAccepter.secondPlayer)
+    ) {
+      indicator = (
+        <div className="p-2 text-sm text-white bg-red-500 center-absolute">
+          (00:{countdown} (waiting for confirm)
+        </div>
+      );
+    } else if (
+      (!userAccepter.firstPlayer && gameData.pos === 1 && userAccepter.secondPlayer) ||
+      (!userAccepter.secondPlayer && gameData.pos === 2 && userAccepter.firstPlayer)
+    ) {
+      indicator = (
+        <button
+          onClick={handlePressStartGame}
+          type="button"
+          className="p-2 text-sm text-white bg-red-500 center-absolute">
+          Start game (00:{countdown} time lefts)
+        </button>
+      );
+    }
+
+    if (userAccepter.firstPlayer && userAccepter.secondPlayer) {
+      indicator = null;
+    }
+
+    if (gameData.pos === 1) {
+      if (room.secondPlayer === null) {
+        indicator = (
+          <div className="p-2 text-sm text-white bg-red-500 center-absolute">
+            Waiting for player
+          </div>
+        );
+      }
+    }
+    if (gameData.pos === 2) {
+      if (room.firstPlayer === null) {
+        indicator = (
+          <div className="p-2 text-sm text-white bg-red-500 center-absolute">
+            Waiting for player
+          </div>
+        );
+      }
+    }
+  }
+
   return (
     <Layout>
       {room && (
@@ -229,6 +350,7 @@ const Room = ({ match }) => {
               pos={1}
               currentUserPos={gameData.pos}
               user={room.firstPlayer}
+              canLeave={!userAccepter.firstPlayer}
               onPickPosition={handleOnUserPickPosition}
               next={gameData.next}
             />
@@ -250,19 +372,22 @@ const Room = ({ match }) => {
               pos={2}
               currentUserPos={gameData.pos}
               user={room.secondPlayer}
+              canLeave={!userAccepter.secondPlayer}
               onPickPosition={handleOnUserPickPosition}
               next={gameData.next}
             />
           </div>
 
           <div className="flex items-center justify-center flex-shrink-0 px-3 mx-2 rounded-lg bg-board">
-            <div className="play-area">
-              <Board
-                onClick={(i, j) => handleTick(i, j)}
-                board={gameData.board}
-                lastTick={gameData.lastTick}
-              />
-            </div>
+            <Spin spinning={indicator !== null} indicator={indicator}>
+              <div className="play-area">
+                <Board
+                  onClick={(i, j) => handleTick(i, j)}
+                  board={gameData.board}
+                  lastTick={gameData.lastTick}
+                />
+              </div>
+            </Spin>
           </div>
 
           <div className="w-80">
