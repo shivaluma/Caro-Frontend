@@ -19,3 +19,13 @@ export const postChangeNewPassword = async (password, token, email) => {
   const { data } = await API.post(`auth/change-password`, { password, token, email });
   return data.data;
 };
+
+export const putActiveAccount = async (token, email) => {
+  const { data } = await API.put(`user/active-account`, { token, email });
+  return data.data;
+};
+
+export const resendActiveEmail = async (email) => {
+  const { data } = await API.post(`auth/resend-email`, { email });
+  return data.data;
+};

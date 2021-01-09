@@ -1,3 +1,5 @@
+/* eslint-disable jsx-a11y/no-static-element-interactions */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable no-nested-ternary */
 import React, { useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
@@ -225,6 +227,16 @@ const ForgotPassword = (props) => {
                   <span className="mt-6 text-sm text-center text-gray-600">
                     You’ll receive this email within 5 minutes. Be sure to check your spam folder,
                     too.
+                  </span>
+
+                  <span className="mt-6 text-sm text-center text-gray-600">
+                    If you do not receive any email, please{' '}
+                    <span
+                      onClick={() => onSubmit(data.values)}
+                      className="font-semibold text-blue-600 cursor-pointer">
+                      click here
+                    </span>{' '}
+                    for new one.
                   </span>
                 </>
               )}

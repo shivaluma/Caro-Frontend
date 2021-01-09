@@ -97,30 +97,36 @@ const Main = () => {
             </div>
           </div>
           <div className="flex-1 p-2 border-t">
-            <div className="flex flex-col">
+            <div className="flex flex-col h-full">
               <span className="mb-1 text-lg font-medium text-center">Leaderboards</span>
-              <Spin spinning={leaderboards === null}>
-                {leaderboards &&
-                  leaderboards.map((user, index) => (
-                    <li
-                      className={clsx(
-                        'p-2 mb-2 text-white bg-gray-500 list-none rounded-md flex items-center'
-                      )}
-                      key={user._id}>
-                      {index < 3 && (
-                        <FaTrophy
+              <div className="relative w-full h-full">
+                <div className="absolute top-0 bottom-0 left-0 right-0 overflow-y-auto">
+                  <Spin spinning={leaderboards === null}>
+                    {leaderboards &&
+                      leaderboards.map((user, index) => (
+                        <li
                           className={clsx(
-                            index === 0 && 'text-yellow-400 w-8',
-                            index === 1 && 'text-gray-200 w-8',
-                            index === 2 && 'text-yellow-600 w-8'
+                            'p-2 mb-2 text-white bg-gray-600 list-none rounded-md flex items-center'
                           )}
-                        />
-                      )}{' '}
-                      {index >= 3 && <span className="w-8 text-center">{`#${index + 1}`}</span>}{' '}
-                      {user.email}
-                    </li>
-                  ))}
-              </Spin>
+                          key={user._id}>
+                          {index < 3 && (
+                            <FaTrophy
+                              className={clsx(
+                                index === 0 && 'text-yellow-400 w-8',
+                                index === 1 && 'text-gray-200 w-8',
+                                index === 2 && 'text-yellow-600 w-8'
+                              )}
+                            />
+                          )}{' '}
+                          {index >= 3 && (
+                            <span className="w-8 text-center trunacte">{`#${index + 1}`}</span>
+                          )}{' '}
+                          {user.email}
+                        </li>
+                      ))}
+                  </Spin>
+                </div>
+              </div>
             </div>
           </div>
         </div>
