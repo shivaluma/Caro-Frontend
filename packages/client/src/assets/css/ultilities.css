@@ -347,10 +347,10 @@ button::focus {
   margin-top: 12px;
 }
 .chat .chat-history {
-  padding: 30px 30px 20px;
+  padding: 10px 10px 10px;
   border-bottom: 2px solid white;
+  border-radius: 10px;
   overflow-y: scroll;
-  height: 50vh;
 }
 .chat .chat-history .message-data {
   margin-bottom: 15px;

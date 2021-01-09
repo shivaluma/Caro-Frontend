@@ -38,7 +38,7 @@ const Profile = (props) => {
   const games = profile?.games?.value;
   return (
     <Layout>
-      {profile && (
+      {user && (
         <>
           <div className="flex">
             <div className="flex flex-col items-center mx-auto mt-12">
@@ -49,24 +49,28 @@ const Profile = (props) => {
                 />
               </div>
 
-              <span className="mt-5 text-4xl">{user.email}</span>
+              <span className="mt-5 text-2xl">{user.email}</span>
 
-              <span className="flex mt-5 text-5xl text-yellow-500">
+              <span className="flex mt-5 text-4xl text-yellow-500">
                 <ImTrophy className="mr-2" />
                 {user.points || 0}
               </span>
-              <div className="flex mt-5 text-2xl font-semibold">
-                <span className="text-green-600">{user.winCount || 0}W</span>
-                <span className="ml-16 text-gray-600">{user.drawCount || 0}D</span>
-                <span className="ml-16 text-red-600">{user.loseCount || 0}L</span>
-                <span className="ml-16 text-blue-600">100% WR</span>
+              <div className="flex mt-5 text-xl font-semibold">
+                <span className="text-green-600">{user.wincount || 0}W</span>
+                <span className="ml-16 text-gray-600">{user.drawcount || 0}D</span>
+                <span className="ml-16 text-red-600">{user.losecount || 0}L</span>
+                <span className="ml-16 text-blue-600">
+                  {(user.wincount / (user.drawcount + user.wincount + user.losecount)) * 100}% WR
+                </span>
               </div>
             </div>
           </div>
 
           <div className="w-full my-12">
             <div className="container">
-              <span className="text-2xl text-bold">Recent games</span>
+              <span className="pl-2 text-2xl border-l-4 border-gray-400 text-bold">
+                Recent games
+              </span>
 
               {games.map((game) => (
                 <div key={game._id} className="flex items-center p-6 mt-3 bg-gray-100 rounded-lg">

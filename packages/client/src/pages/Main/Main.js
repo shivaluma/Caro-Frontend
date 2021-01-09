@@ -1,3 +1,5 @@
+/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable react/display-name */
 import { useMemo, useCallback, useEffect, useState } from 'react';
 import { useLayout } from 'hooks';
@@ -7,15 +9,20 @@ import socket from 'configs/socket';
 import { RoomService, UserService } from 'services';
 import clsx from 'clsx';
 import { FaTrophy } from 'react-icons/fa';
-import { Spin } from 'antd';
+import { Spin, Modal, Avatar, Select } from 'antd';
+import { ImTrophy } from 'react-icons/im';
 import { AddButton, GameButton } from './components';
 
-const Main = () => {
+const { Option } = Select;
+const Main = (props) => {
   // const dispatch = useDispatch();
   const onlines = useSelector((state) => state.online);
   const user = useSelector((state) => state.user);
   const [rooms, setRooms] = useState([]);
   const [leaderboards, setLeaderboards] = useState(null);
+  const [modalData, setModalData] = useState({ show: false, player: null });
+  const [newRoomData, setNewRoomData] = useState({ password: '', time: 30 });
+  const [newRoomModalShow, setNewRoomModalShow] = useState(false);
   const history = useHistory();
   useEffect(() => {
     (async () => {
@@ -38,9 +45,14 @@ const Main = () => {
     });
   }, [history]);
 
-  const handleCreateNewRoom = useCallback(() => {
-    socket.emit('create-room', { _id: user._id });
-  }, [user]);
+  const handleOpenCreateRoomModal = useCallback(() => {
+    setNewRoomModalShow(true);
+    // socket.emit('create-room', { user });
+  }, []);
+
+  const handleCreateNewRoom = () => {
+    socket.emit('create-room', { user, option: newRoomData });
+  };
 
   const handleRoomClick = useCallback(
     (roomId) => {
@@ -48,20 +60,41 @@ const Main = () => {
     },
     [history]
   );
+
+  const handleUserClick = (user) => {
+    setModalData(() => ({ show: true, player: user }));
+  };
+
+  const handleHideModal = () => {
+    setModalData(() => ({ show: false }));
+  };
+
+  const handleHideCreateRoomModal = () => {
+    setNewRoomModalShow(false);
+  };
+
+  const handleRedirectToProfile = () => {
+    props.history.push(`/profile/${modalData.player._id}`);
+  };
+
+  const handleChangeFieldRoomData = (field, value) => {
+    setNewRoomData((prev) => ({ ...prev, [field]: value }));
+  };
+
   const Layout = useMemo(
     () =>
       // eslint-disable-next-line react-hooks/rules-of-hooks
       useLayout({
         left: () => (
           <div className="flex">
-            <div key="leftHeader" className="ml-2 text-lg font-medium text-gray-800">
-              Rooms <span className="text-lg">({rooms.length})</span>
+            <div key="leftHeader" className="ml-2 text-xl font-medium text-gray-800">
+              Rooms <span className="text-xl">({rooms.length})</span>
             </div>
           </div>
         ),
-        right: () => <AddButton handleClick={handleCreateNewRoom} />
+        right: () => <AddButton handleClick={handleOpenCreateRoomModal} />
       }),
-    [rooms.length, handleCreateNewRoom]
+    [rooms.length, handleOpenCreateRoomModal]
   );
 
   return (
@@ -90,7 +123,10 @@ const Main = () => {
             <div className="flex flex-col">
               <span className="text-lg font-medium">{`Who Is Online (${onlines.length})`}</span>
               {onlines.map((online) => (
-                <li className="p-2 list-none bg-gray-200 rounded-md" key={online}>
+                <li
+                  className="p-2 list-none bg-gray-200 rounded-md"
+                  onClick={() => handleUserClick(online)}
+                  key={online}>
                   {online}
                 </li>
               ))}
@@ -106,8 +142,9 @@ const Main = () => {
                       leaderboards.map((user, index) => (
                         <li
                           className={clsx(
-                            'p-2 mb-2 text-white bg-gray-600 list-none rounded-md flex items-center'
+                            'p-2 mb-2 text-white bg-gray-600 list-none rounded-md flex items-center hover:bg-gray-500'
                           )}
+                          onClick={() => handleUserClick(user)}
                           key={user._id}>
                           {index < 3 && (
                             <FaTrophy
@@ -131,6 +168,62 @@ const Main = () => {
           </div>
         </div>
       </div>
+
+      <Modal
+        title="Create New Room"
+        visible={newRoomModalShow}
+        onOk={handleCreateNewRoom}
+        okText="Create Room"
+        onCancel={handleHideCreateRoomModal}>
+        <div className="flex flex-col p-2">
+          <span className="text-sm font-semibold">Password</span>
+          <input
+            value={newRoomData.password}
+            onChange={(event) => handleChangeFieldRoomData('password', event.target.value)}
+            className="px-3 py-2 mt-1 border rounded-md focus:outline-none"
+            placeholder="Leave blank for open room"
+          />
+
+          <span className="mt-5 text-sm font-semibold">Time for a turn (second)</span>
+          <Select
+            value={newRoomData.time}
+            className="w-full mt-1"
+            onChange={(value) => handleChangeFieldRoomData('time', value)}>
+            <Option value="5">5</Option>
+            <Option value="10">10</Option>
+            <Option value="10">15</Option>
+            <Option value="20">20</Option>
+            <Option value="30">30</Option>
+            <Option value="40">40</Option>
+            <Option value="50">50</Option>
+            <Option value="60">60</Option>
+          </Select>
+        </div>
+      </Modal>
+
+      <Modal
+        title={modalData?.player?.email}
+        visible={modalData.show}
+        onOk={handleHideModal}
+        cancelText="View full profile"
+        onCancel={handleRedirectToProfile}>
+        <div className="flex flex-col items-center justify-center">
+          <Avatar
+            size={64}
+            src="https://cdn.dribbble.com/users/4557429/avatars/small/open-uri20191213-19471-145569c?1576296398"
+          />
+
+          <div className="flex text-xs font-semibold">
+            <span className="text-green-600">{modalData?.player?.wincount || 0}W</span>
+            <span className="ml-3 text-gray-600">{modalData?.player?.drawcount || 0}D</span>
+            <span className="ml-3 text-red-600">{modalData?.player?.losecount || 0}L</span>
+          </div>
+          <span className="flex items-center mt-2 text-xs text-yellow-600">
+            {modalData?.player?.point || 0}
+            <ImTrophy className="ml-1" />
+          </span>
+        </div>
+      </Modal>
     </Layout>
   );
 };

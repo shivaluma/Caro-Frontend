@@ -9,11 +9,15 @@ import { AiOutlineFlag } from 'react-icons/ai';
 import { FaHandshake } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import socket from 'configs/socket';
-import { Modal } from 'antd';
+import { Modal, Tabs } from 'antd';
 import calculateWin from 'utils/calculateWin';
+import { Select, Input } from 'antd';
 import { Chat, UserPlay, Board } from './components';
 
-const Room = ({ match }) => {
+const { Option } = Select;
+
+const { TabPane } = Tabs;
+const Room = ({ match, history }) => {
   // const dispatch = useDispatch();
 
   // eslint-disable-next-line no-unused-vars
@@ -33,9 +37,13 @@ const Room = ({ match }) => {
   const [userAccepter, setUserAccepter] = useState({ firstPlayer: false, secondPlayer: false });
 
   const [isModalVisible, setIsModalVisible] = useState(false);
-
+  const [currentTab, setCurrentTab] = useState('1');
   const user = useSelector((state) => state.user);
 
+  const handleLeaveRoomClick = useCallback(() => {
+    socket.emit('user-leave-room', { roomId: Number(match.params.id), user });
+    history.push('/');
+  }, [history, user, match.params.id]);
   const Layout = useMemo(
     () =>
       // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -44,12 +52,24 @@ const Room = ({ match }) => {
           <div key="leftHeader" className="ml-2 text-xl font-medium text-gray-800">
             {match.params.id !== null && `Room #${match.params.id}`}
           </div>
+        ),
+        right: () => (
+          <button
+            type="button"
+            key="right"
+            onClick={handleLeaveRoomClick}
+            className="px-3 py-2 mr-2 font-semibold border-2 rounded-full text-main border-main">
+            Leave Room
+          </button>
         )
       }),
-    [match.params.id]
+    [match.params.id, handleLeaveRoomClick]
   );
 
+  const hasRunRef = useRef(false);
   useEffect(() => {
+    if (hasRunRef.current) return;
+    hasRunRef.current = true;
     socket.on('player-change-side', ({ user, side, leaveSide, userTurn }) => {
       if (side === 1) {
         setRoom((prev) => ({ ...prev, firstPlayer: user }));
@@ -108,6 +128,24 @@ const Room = ({ match }) => {
       if (!messageRef.current) return;
       messageRef.current.scrollIntoView({ behavior: 'smooth' });
     });
+
+    socket.on('user-join-room', (user) => {
+      setChat((prev) => [
+        ...prev,
+        { sender: 'Admin', content: `New user has joined the room : ${user.email}` }
+      ]);
+      if (!messageRef.current) return;
+      messageRef.current.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    socket.on('user-leave-room', (user) => {
+      setChat((prev) => [
+        ...prev,
+        { sender: 'Admin', content: `A user has leaved the room : ${user.email}` }
+      ]);
+      if (!messageRef.current) return;
+      messageRef.current.scrollIntoView({ behavior: 'smooth' });
+    });
   }, []);
 
   useEffect(() => {
@@ -117,9 +155,24 @@ const Room = ({ match }) => {
     }
     (async () => {
       const room = await RoomService.getRoomById(roomIdNum, 'public');
-      console.log(room);
+      if (!room.data) {
+        history.replace('/');
+      }
       setRoom(() => room.data);
-      setChat(room?.data?.chats || []);
+
+      const initChat =
+        room?.data?.owner?._id === user._id
+          ? [
+              {
+                sender: 'Admin',
+                content: 'Your are the owner of this room, you can change the game settings.',
+                createdAt: new Date()
+              }
+            ]
+          : [];
+
+      console.log(initChat);
+      setChat(room?.data?.chats.length > 0 ? room?.data?.chats : [...initChat]);
 
       const next = room?.data?.next != null ? !room.data.next : true;
       setGameData((prev) => ({
@@ -390,8 +443,34 @@ const Room = ({ match }) => {
             </Spin>
           </div>
 
-          <div className="w-80">
-            <Chat messages={chat} endRef={messageRef} onMessageSend={handleSendMessage} />
+          <div className="flex flex-col w-80">
+            <div className="relative flex-1 w-full">
+              <div className="absolute top-0 bottom-0 left-0 right-0">
+                <Chat messages={chat} endRef={messageRef} onMessageSend={handleSendMessage} />
+              </div>
+            </div>
+            <div className="flex-1 w-full p-2 mt-6 bg-gray-100 rounded-lg">
+              <Tabs defaultActiveKey="1" onChange={console.log}>
+                <TabPane tab="Moves" key="1">
+                  asdasd
+                </TabPane>
+                <TabPane tab="In Rooms" key="2">
+                  {room.people.map((p) => (
+                    <li key={p._id} className="list-none">
+                      {p.email}
+                    </li>
+                  ))}
+                </TabPane>
+                <TabPane tab="Rules" key="3">
+                  <div className="flex">
+                    <Select defaultValue="public" style={{ width: 120 }} onChange={() => {}}>
+                      <Option value="jack">private</Option>
+                    </Select>
+                    <Input className="ml-2" placeholder="Password" />
+                  </div>
+                </TabPane>
+              </Tabs>
+            </div>
           </div>
         </div>
       )}
