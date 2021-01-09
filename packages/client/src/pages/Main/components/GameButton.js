@@ -26,7 +26,7 @@ const GameButton = ({ onClick, room, hasPassword = true, hasStarted = true }) =>
         className="flex outline-none tile-structure hover:bg-gray-200 focus:outline-none">
         <div className="relative w-32 h-32">
           <div className="text-6xl text-white bg-main box-button">
-            <GiTicTacToe className={clsx(room.started && 'text-green-300')} />
+            <GiTicTacToe className={clsx(room.started && 'blink')} />
           </div>
           {hasPassword && hasStarted && <MdLock className="text-xl text-white right-icon" />}
           {room.firstPlayer && <FiUser className="text-xl font-semibold text-white user-icon" />}
