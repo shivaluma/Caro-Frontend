@@ -5,6 +5,7 @@ import clsx from 'clsx';
 import { useDispatch } from 'react-redux';
 import { signin } from 'slices/user';
 
+import { Link } from 'react-router-dom';
 import { useLoading } from '../../hooks';
 
 const LoginForm = ({ changeMode, redirect }) => {
@@ -23,11 +24,9 @@ const LoginForm = ({ changeMode, redirect }) => {
       changeLoading();
       redirect();
     } catch (err) {
-      console.log(err.response);
-
       setError('password', {
         type: 'manual',
-        message: err.response.data.message
+        message: err?.response?.data?.message || 'ERR: CONNECTION REFUSED.'
       });
       changeLoading();
     }
@@ -83,7 +82,13 @@ const LoginForm = ({ changeMode, redirect }) => {
           <div className="flex items-center justify-center h-10">Log In</div>
         </button>
 
-        <span className="mt-6 text-xs text-center text-gray-400">
+        <Link
+          className="mt-3 font-medium text-center text-gray-400 cursor-pointer text-md hover:underline"
+          to="/forgot-password">
+          Forgot password?
+        </Link>
+
+        <span className="mt-4 text-xs text-center text-gray-400">
           Don&apos;t have an account?
           <button
             type="button"

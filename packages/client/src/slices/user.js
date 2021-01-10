@@ -6,6 +6,7 @@ import API from '@caro/common/api';
 import socket from 'configs/socket';
 import { initArray } from 'slices/online';
 import { changeInit } from './init';
+import { change } from './errors';
 
 const userSlice = createSlice({
   name: 'user',
@@ -20,6 +21,10 @@ const userSlice = createSlice({
       }, 100);
       return action.payload;
     },
+    updateRoom(state, action) {
+      state.room = action.payload;
+      return state;
+    },
     removeUser(state) {
       socket.emit('user-offline', state);
       return null;
@@ -27,20 +32,23 @@ const userSlice = createSlice({
   }
 });
 
-export const { setUser, removeUser } = userSlice.actions;
+export const { setUser, removeUser, updateRoom } = userSlice.actions;
 
 export default userSlice.reducer;
-
 // Actions
+
+export const changeRoom = (roomId) => async (dispatch) => {
+  dispatch(updateRoom(roomId));
+};
 
 export const signin = ({ email, password }) => async (dispatch) => {
   const res = await API.post('auth/signin', {
     email,
     password
   });
+
   if (res?.data?.data) {
     localStorage.setItem('whatisthis', res.data.data.accessToken);
-
     dispatch(setUser(res.data.data.user));
   }
 };
@@ -89,7 +97,7 @@ export const signup = ({ email, password, confirmPassword }) => async (dispatch)
 export const initUserLoading = () => async (dispatch) => {
   try {
     const res = await API.get('user/me');
-    const onlines = await API.get('user/online');
+
     if (res?.data?.data) {
       await dispatch(setUser(res.data.data));
     }
@@ -97,9 +105,18 @@ export const initUserLoading = () => async (dispatch) => {
 
     return res;
   } catch (e) {
+    if (!e.response) return e;
+    dispatch(change({ payload: { error: e.response.data.message } }));
     return e.response;
   } finally {
-    dispatch(changeInit());
+    try {
+      const onlines = await API.get('user/online');
+      await dispatch(initArray(onlines?.data?.data));
+    } catch (e) {
+      console.log(e.response);
+    } finally {
+      dispatch(changeInit());
+    }
   }
 };
 

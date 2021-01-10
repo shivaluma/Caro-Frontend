@@ -2,24 +2,26 @@
 import { useEffect, lazy, useRef } from 'react';
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-
-import { Auth } from 'pages';
+import { Modal } from 'antd';
+import { ActiveAccount, Auth } from 'pages';
 import socket from 'configs/socket';
 import 'assets/css/tailwind.css';
 
 import { Suspense } from 'react';
 import Loading from 'components/Loading';
 import { initUserLoading } from 'slices/user';
+
 import ProtectedRoute from 'components/ProtectedRoute';
 import { Main, Room } from 'pages';
 import { addItem, removeItem } from 'slices/online';
-import { Profile } from 'pages';
+import { Profile, ForgotPassword } from 'pages';
 
 function App() {
   const dispatch = useDispatch();
   const isInit = useSelector((state) => state.init);
   const user = useSelector((state) => state.user);
-  const prevEmail = useRef(null);
+  const error = useSelector((state) => state.error);
+
   useEffect(() => {
     (async function init() {
       await dispatch(initUserLoading());
@@ -30,9 +32,9 @@ function App() {
   useEffect(() => {
     socket.on('user-change', ({ online, data }) => {
       if (online) {
-        dispatch(addItem(data.email));
+        dispatch(addItem(data));
       } else {
-        dispatch(removeItem(data.email));
+        dispatch(removeItem(data));
       }
     });
 
@@ -48,6 +50,15 @@ function App() {
     }
   }, [dispatch, user]);
 
+  useEffect(() => {
+    if (error) {
+      Modal.error({
+        title: 'Session error',
+        content: error
+      });
+    }
+  }, [error]);
+
   return isInit ? (
     <Loading />
   ) : (
@@ -57,7 +68,10 @@ function App() {
           <ProtectedRoute exact path="/" component={Main} />
 
           <Route exact path="/login" component={Auth} />
+          <Route exact path="/forgot-password" component={ForgotPassword} />
+          <Route exact path="/active-account" component={ActiveAccount} />
           <Route path="/profile/:id" component={Profile} />
+
           <ProtectedRoute path="/:id" component={Room} />
         </Switch>
       </Suspense>
