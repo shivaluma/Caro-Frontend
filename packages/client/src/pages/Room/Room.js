@@ -386,7 +386,7 @@ const Room = ({ match, history }) => {
     }
 
     return () => clearInterval(interval);
-  }, [clockToggle]);
+  }, []);
 
   const handleSendMessage = useCallback(
     (content) => {
