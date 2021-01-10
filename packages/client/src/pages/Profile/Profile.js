@@ -53,14 +53,16 @@ const Profile = (props) => {
 
               <span className="flex mt-5 text-4xl text-yellow-500">
                 <ImTrophy className="mr-2" />
-                {user.points || 0}
+                {user.point || 0}
               </span>
               <div className="flex mt-5 text-xl font-semibold">
                 <span className="text-green-600">{user.wincount || 0}W</span>
                 <span className="ml-16 text-gray-600">{user.drawcount || 0}D</span>
                 <span className="ml-16 text-red-600">{user.losecount || 0}L</span>
                 <span className="ml-16 text-blue-600">
-                  {(user.wincount / (user.drawcount + user.wincount + user.losecount)) * 100}% WR
+                  {(user.wincount / (user.drawcount + user.wincount + user.losecount)).toFixed(2) *
+                    100}
+                  % WR
                 </span>
               </div>
             </div>

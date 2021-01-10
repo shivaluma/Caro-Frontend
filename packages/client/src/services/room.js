@@ -5,9 +5,14 @@ const getAllRooms = async () => {
   return data.data;
 };
 
+const postCheckPassword = async (roomId, password) => {
+  const { data } = await API.post(`rooms/check-password`, { roomId, password });
+  return data;
+};
+
 const getRoomById = async (id, type) => {
   const { data } = await API.get(`rooms/${id}?type=${type}`);
   return data;
 };
 
-export { getAllRooms, getRoomById };
+export { getAllRooms, getRoomById, postCheckPassword };

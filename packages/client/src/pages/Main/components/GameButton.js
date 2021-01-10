@@ -28,7 +28,7 @@ const GameButton = ({ onClick, room, hasPassword = true, hasStarted = true }) =>
           <div className="text-6xl text-white bg-main box-button">
             <GiTicTacToe className={clsx(room.started && 'blink')} />
           </div>
-          {hasPassword && hasStarted && <MdLock className="text-xl text-white right-icon" />}
+          {room.password && hasStarted && <MdLock className="text-xl text-white right-icon" />}
           {room.firstPlayer && <FiUser className="text-xl font-semibold text-white user-icon" />}
           {room.secondPlayer && (
             <FiUser className="text-xl font-semibold text-white user-icon right-icon" />

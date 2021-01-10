@@ -36,6 +36,12 @@ const Main = (props) => {
     socket.on('new-room', (data) => {
       setRooms((prev) => [...prev, data.room]);
     });
+
+    socket.on('clear-room', (roomId) => {
+      console.log('CLEAR EOOM');
+
+      setRooms((prev) => prev.filter((el, index) => index !== roomId));
+    });
   }, []);
 
   useEffect(() => {
