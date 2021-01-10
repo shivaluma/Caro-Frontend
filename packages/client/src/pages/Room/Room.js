@@ -79,10 +79,10 @@ const Room = ({ match, history }) => {
         }));
 
         setRoom(() => {
-          if (room.data.people.findIndex((u) => u._id === user._id) === -1) {
-            return { ...room.data, people: [user, ...room.data.people] };
+          if (room.people.findIndex((u) => u._id === user._id) === -1) {
+            return { ...room, people: [user, ...room.people] };
           }
-          return room.data;
+          return room;
         });
 
         return;
@@ -626,6 +626,7 @@ const Room = ({ match, history }) => {
     try {
       const data = await postCheckPassword(Number(match.params.id), password);
       setInitStatus((prev) => ({ ...prev, join: true, requirepass: false }));
+
       onUserJoinRoom(user);
     } catch (err) {
       setError('password', { type: 'manual', message: 'Required.' });
