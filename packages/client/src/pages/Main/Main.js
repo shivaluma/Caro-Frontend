@@ -5,7 +5,7 @@ import { useHistory } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import socket from 'configs/socket';
 import { RoomService } from 'services';
-import { AddButton, GameButton } from './components';
+import { AddButton, GameButton, QuickMatchButton } from './components';
 
 const Main = () => {
   // const dispatch = useDispatch();
@@ -53,7 +53,12 @@ const Main = () => {
             </div>
           </div>
         ),
-        right: () => <AddButton handleClick={handleCreateNewRoom} />
+        right: () => (
+          <>
+            <QuickMatchButton />
+            <AddButton handleClick={handleCreateNewRoom} />
+          </>
+        )
       }),
     [rooms.length, handleCreateNewRoom]
   );

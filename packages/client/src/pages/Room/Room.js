@@ -35,22 +35,6 @@ const Room = ({ match }) => {
   const user = useSelector((state) => state.user);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
-  const handleOk = () => {
-    // const roomIdNum = Number(match.params.id);
-    // socket.emit('game-end', {
-    //   board: gameData.board,
-    //   roomId: roomIdNum,
-    //   next: gameData.next,
-    //   lastTick: null,
-    //   win: user
-    // });
-    setIsModalVisible(false);
-  };
-
-  const handleCancel = () => {
-    setIsModalVisible(false);
-  };
-
   const Layout = useMemo(
     () =>
       // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -102,14 +86,18 @@ const Room = ({ match }) => {
     });
 
     socket.on('game-ended', ({ board, next, lastTick }) => {
+      if (next === null) {
+        setWinner('Draw');
+      } else {
+        setWinner(next === true ? 'Player 1 win' : 'Player 2 win');
+      }
       setGameData((prev) => ({
         ...prev,
         board,
-        next,
+        next: !next || true,
         userTurn: null,
         lastTick
       }));
-      setWinner(lastTick === 'O' ? 'Player 1' : 'Player 2');
 
       setUserAccepter(() => ({
         firstPlayer: false,
@@ -286,14 +274,14 @@ const Room = ({ match }) => {
             onClick={handlePressStartGame}
             type="button"
             className="p-2 text-sm text-white bg-red-500 center-absolute">
-            {`${winner ? `${winner} win \n` : ''} Start game`}
+            {`${winner ? `${winner} ` : ''} Start game`}
           </button>
         ) : (
           <button
             onClick={handlePressStartGame}
             type="button"
             className="p-2 text-sm text-white bg-red-500 center-absolute">
-            {`${winner ? `${winner} win \n` : ''} Start game`}
+            {`${winner ? `${winner} ` : ''} Start game`}
           </button>
         );
     }
@@ -346,18 +334,38 @@ const Room = ({ match }) => {
   }
 
   const handleClaimDraw = () => {
-    socket.emit('claim-draw', { roomId: match.params.id });
+    if (gameData.userTurn._id === user._id) {
+      socket.emit('claim-draw', { roomId: match.params.id });
+    }
   };
 
   const handleResign = () => {
+    if (gameData.lastTick) {
+      const roomIdNum = Number(match.params.id);
+      socket.emit('game-end', {
+        board: gameData.board,
+        roomId: roomIdNum,
+        next: gameData.next,
+        lastTick: null,
+        lose: user
+      });
+    }
+  };
+
+  const handleOk = () => {
     const roomIdNum = Number(match.params.id);
     socket.emit('game-end', {
       board: gameData.board,
       roomId: roomIdNum,
       next: gameData.next,
       lastTick: null,
-      lose: user
+      lose: 'draw'
     });
+    setIsModalVisible(false);
+  };
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
   };
 
   return (
@@ -415,14 +423,13 @@ const Room = ({ match }) => {
             <Chat messages={chat} endRef={messageRef} onMessageSend={handleSendMessage} />
           </div>
           <Modal
-            title="Basic Modal"
+            title="Opponent claim a draw!"
             visible={isModalVisible}
             onOk={handleOk}
-            onCancel={handleCancel}>
-            <p>Some contents...</p>
-            <p>Some contents...</p>
-            <p>Some contents...</p>
-          </Modal>
+            onCancel={handleCancel}
+            cancelText="Decline"
+            okText="Accept"
+          />
         </div>
       )}
     </Layout>
