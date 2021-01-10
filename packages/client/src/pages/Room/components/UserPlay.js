@@ -4,11 +4,20 @@ import { Avatar } from 'antd';
 import { ImTrophy } from 'react-icons/im';
 import { FiLogOut } from 'react-icons/fi';
 
-export default function UserPlay({ user, pos, onPickPosition, currentUserPos, next, canLeave }) {
+export default function UserPlay({
+  user,
+  pos,
+  onPickPosition,
+  currentUserPos,
+  next,
+  canLeave,
+  started,
+  countdown
+}) {
   return (
     <div
       className={`relative flex flex-col items-center justify-center w-full h-64 bg-gray-100 border-pink-500 rounded-md ${
-        (next && pos === 1) || (!next && pos === 2) ? 'border-2' : ''
+        (started && next && pos === 1) || (started && !next && pos === 2) ? 'border-2' : ''
       }`}>
       {user ? (
         <>
@@ -34,6 +43,10 @@ export default function UserPlay({ user, pos, onPickPosition, currentUserPos, ne
             {user.point || 0}
             <ImTrophy className="ml-1" />
           </span>
+
+          {((started && next && pos === 1) || (started && !next && pos === 2)) && (
+            <span className="mt-5">{countdown}</span>
+          )}
         </>
       ) : !currentUserPos ? (
         <>

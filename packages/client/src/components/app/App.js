@@ -21,7 +21,7 @@ function App() {
   const isInit = useSelector((state) => state.init);
   const user = useSelector((state) => state.user);
   const error = useSelector((state) => state.error);
-  const prevEmail = useRef(null);
+
   useEffect(() => {
     (async function init() {
       await dispatch(initUserLoading());
@@ -32,9 +32,9 @@ function App() {
   useEffect(() => {
     socket.on('user-change', ({ online, data }) => {
       if (online) {
-        dispatch(addItem(data.email));
+        dispatch(addItem(data));
       } else {
-        dispatch(removeItem(data.email));
+        dispatch(removeItem(data));
       }
     });
 
