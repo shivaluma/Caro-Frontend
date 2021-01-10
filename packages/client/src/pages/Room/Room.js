@@ -290,7 +290,7 @@ const Room = ({ match, history }) => {
   useEffect(() => {
     if (initStatus.join) {
       const roomIdNum = Number(match.params.id);
-      if (!user.room) dispatch(changeRoom(roomIdNum));
+      dispatch(changeRoom(roomIdNum));
     }
   }, [initStatus.join, match.params.id, dispatch, user.room]);
 
