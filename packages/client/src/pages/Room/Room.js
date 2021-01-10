@@ -53,7 +53,7 @@ const Room = ({ match, history }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentTab, setCurrentTab] = useState('1');
   const [password, setPassword] = useState('');
-
+  const [clockToggle, setClockToggle] = useState(false);
   const onUserJoinRoom = useCallback((user) => {
     setRoom((prev) => ({
       ...prev,
@@ -386,7 +386,7 @@ const Room = ({ match, history }) => {
     }
 
     return () => clearInterval(interval);
-  }, []);
+  }, [clockToggle]);
 
   const handleSendMessage = useCallback(
     (content) => {
@@ -615,6 +615,10 @@ const Room = ({ match, history }) => {
     } catch (err) {
       setError('password', { type: 'manual', message: 'Required.' });
     }
+  };
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
   };
 
   const { handleSubmit, register, errors, setError } = useForm();
