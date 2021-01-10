@@ -52,7 +52,7 @@ const Room = ({ match, history }) => {
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentTab, setCurrentTab] = useState('1');
-  const [password, setPassword] = useState('');
+
   const [clockToggle, setClockToggle] = useState(false);
   const onUserJoinRoom = useCallback((user) => {
     setRoom((prev) => ({
@@ -77,6 +77,13 @@ const Room = ({ match, history }) => {
           requirepass: false,
           join: true
         }));
+
+        setRoom(() => {
+          if (room.data.people.findIndex((u) => u._id === user._id) === -1) {
+            return { ...room.data, people: [user, ...room.data.people] };
+          }
+          return room.data;
+        });
 
         return;
       }
@@ -231,12 +238,6 @@ const Room = ({ match, history }) => {
       if (!room.data) {
         history.replace('/');
       }
-      setRoom(() => {
-        if (room.data.people.findIndex((u) => u._id === user._id) === -1) {
-          return { ...room.data, people: [user, ...room.data.people] };
-        }
-        return room.data;
-      });
 
       const initChat =
         room?.data?.owner?._id === user._id
@@ -248,6 +249,10 @@ const Room = ({ match, history }) => {
               }
             ]
           : [];
+
+      setRoom(() => {
+        return room.data;
+      });
 
       setChat(room?.data?.chats.length > 0 ? room?.data?.chats : [...initChat]);
 
@@ -354,7 +359,8 @@ const Room = ({ match, history }) => {
           board: gameData.board,
           roomId: roomIdNum,
           next: gameData.next,
-          lastTick: [3, 3]
+          lastTick: [3, 3],
+          lose: gameData.next ? room?.firstPlayer : room?.secondPlayer
         });
         setUserAccepter(() => ({
           firstPlayer: false,
@@ -368,7 +374,16 @@ const Room = ({ match, history }) => {
         setCountdown(() => room?.time);
       }
     }
-  }, [gameData.started, countdown, gameData.board, gameData.next, match.params.id, room?.time]);
+  }, [
+    gameData.started,
+    countdown,
+    gameData.board,
+    gameData.next,
+    match.params.id,
+    room?.time,
+    room?.firstPlayer,
+    room?.secondPlayer
+  ]);
 
   // const limitInterval = useRef(false);
   useEffect(() => {
@@ -599,7 +614,7 @@ const Room = ({ match, history }) => {
       roomId: roomIdNum,
       next: gameData.next,
       lastTick: null,
-      lose: 'draw'
+      lose: null
     });
     setUserAccepter(() => ({
       firstPlayer: false,
@@ -731,7 +746,7 @@ const Room = ({ match, history }) => {
         )}
 
         {initStatus.requirepass && (
-          <div className="flex flex-col items-center justify-center flex-1 w-full h-full">
+          <div className="flex flex-col items-center justify-center flex-1 w-full h-full mt-20">
             <span className="-mt-5 text-lg font-semibold text-gray-800">
               This room requires password.
             </span>
