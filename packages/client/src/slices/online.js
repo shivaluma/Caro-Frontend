@@ -10,12 +10,16 @@ const loadingSlice = createSlice({
       return action.payload;
     },
     add(state, action) {
-      if (state.includes(action.payload)) return state;
-      return [...state, action.payload];
+      if (state.findIndex((u) => u._id === action.payload._id) === -1)
+        return [...state, action.payload];
+
+      return state;
     },
 
     remove(state, action) {
-      return state.filter((el) => el !== action.payload);
+      console.log(state);
+      console.log(action);
+      return state.filter((el) => el._id !== action.payload._id);
     }
   }
 });

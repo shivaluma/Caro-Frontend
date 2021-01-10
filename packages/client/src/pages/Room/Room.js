@@ -48,9 +48,18 @@ const Room = ({ match, history }) => {
   const [userAccepter, setUserAccepter] = useState({ firstPlayer: false, secondPlayer: false });
 
   const user = useSelector((state) => state.user);
+  const onlines = useSelector((state) => state.online);
+
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentTab, setCurrentTab] = useState('1');
   const [password, setPassword] = useState('');
+
+  const onUserJoinRoom = useCallback((user) => {
+    setRoom((prev) => ({
+      ...prev,
+      people: [...prev.people, user]
+    }));
+  }, []);
 
   const handleLeaveRoomClick = useCallback(() => {
     dispatch(changeRoom(null));
@@ -68,6 +77,7 @@ const Room = ({ match, history }) => {
           requirepass: false,
           join: true
         }));
+
         return;
       }
       if (room.password && room.people.findIndex((u) => u._id === user._id) === -1) {
@@ -100,13 +110,6 @@ const Room = ({ match, history }) => {
       }),
     [match.params.id, handleLeaveRoomClick]
   );
-
-  const onUserJoinRoom = useCallback((user) => {
-    setRoom((prev) => ({
-      ...prev,
-      people: [...prev.people, user]
-    }));
-  }, []);
 
   const onUserLeaveRoom = useCallback((user) => {
     setRoom((prev) => ({
@@ -146,6 +149,8 @@ const Room = ({ match, history }) => {
         lastTick,
         move
       }));
+      console.log('Room changed');
+      setCountdown(() => 30);
     });
 
     socket.on('press-start', ({ pos }) => {
@@ -154,7 +159,10 @@ const Room = ({ match, history }) => {
       } else {
         setUserAccepter((prev) => ({ ...prev, secondPlayer: true }));
       }
+
       setCountdown(() => 10);
+
+      setClockToggle(() => true);
     });
 
     socket.on('game-end-cli', ({ board, next, lastTick, move }) => {
@@ -166,12 +174,15 @@ const Room = ({ match, history }) => {
       setGameData((prev) => ({
         ...prev,
         board,
-        next: !next || true,
+        next,
+        started: false,
         userTurn: null,
         lastTick,
         move
       }));
-
+      setWinner(lastTick === 'O' ? 'Player 1' : 'Player 2');
+      setCountdown(() => room?.time);
+      setClockToggle(() => false);
       setUserAccepter(() => ({
         firstPlayer: false,
         secondPlayer: false
@@ -208,9 +219,8 @@ const Room = ({ match, history }) => {
       if (!messageRef.current) return;
       messageRef.current.scrollIntoView({ behavior: 'smooth' });
     });
-  }, [initStatus.init, onUserJoinRoom, onUserLeaveRoom]);
+  }, [initStatus.init, onUserJoinRoom, onUserLeaveRoom, room?.time]);
 
-  console.log(room);
   useEffect(() => {
     const roomIdNum = Number(match.params.id);
     if (!Number.isInteger(roomIdNum) || roomIdNum < 0 || roomIdNum >= 20) {
@@ -221,7 +231,12 @@ const Room = ({ match, history }) => {
       if (!room.data) {
         history.replace('/');
       }
-      setRoom(() => room.data);
+      setRoom(() => {
+        if (room.data.people.findIndex((u) => u._id === user._id) === -1) {
+          return { ...room.data, people: [user, ...room.data.people] };
+        }
+        return room.data;
+      });
 
       const initChat =
         room?.data?.owner?._id === user._id
@@ -266,24 +281,112 @@ const Room = ({ match, history }) => {
   useEffect(() => {
     if (initStatus.join) {
       const roomIdNum = Number(match.params.id);
-      dispatch(changeRoom(roomIdNum));
+      if (!user.room) dispatch(changeRoom(roomIdNum));
     }
-  }, [initStatus.join, match.params.id, dispatch]);
+  }, [initStatus.join, match.params.id, dispatch, user.room]);
 
   useEffect(() => {
     if (room && user) {
       setGameData((prev) => ({
         ...prev,
-        pos: room.firstPlayer?._id === user._id ? 1 : room.secondPlayer?._id === user._id ? 2 : null
+        pos:
+          room?.firstPlayer?._id === user._id ? 1 : room?.secondPlayer?._id === user._id ? 2 : null
       }));
     }
   }, [room, user]);
 
   useEffect(() => {
-    if (userAccepter.firstPlayer && userAccepter.secondPlayer) {
-      setCountdown(() => 0);
+    if (gameData.started) return;
+    if (countdown === 0 && !(userAccepter.firstPlayer && userAccepter.secondPlayer)) {
+      setClockToggle(() => false);
+      if (!room?.firstPlayer?._id || !room?.secondPlayer?._id) return;
+
+      if (!userAccepter.firstPlayer && room?.firstPlayer._id === user._id) {
+        setRoom((prev) => ({ ...prev, firstPlayer: null }));
+        setGameData((prev) => ({
+          ...prev,
+          pos: null
+        }));
+        socket.emit('change-side', { roomId: match.params.id, user, side: null });
+      } else if (!userAccepter.secondPlayer && room?.secondPlayer._id === user._id) {
+        setRoom((prev) => ({ ...prev, secondPlayer: null }));
+        setGameData((prev) => ({
+          ...prev,
+          pos: null
+        }));
+        socket.emit('change-side', { roomId: match.params.id, user, side: null });
+      }
+      setCountdown(() => room?.time);
+      setUserAccepter(() => ({
+        firstPlayer: false,
+        secondPlayer: false
+      }));
     }
-  }, [userAccepter]);
+  }, [
+    countdown,
+    userAccepter.firstPlayer,
+    userAccepter.secondPlayer,
+    gameData.started,
+    room?.firstPlayer,
+    room?.secondPlayer,
+    room?.time,
+    match.params.id,
+    user
+  ]);
+
+  useEffect(() => {
+    if (userAccepter.firstPlayer && userAccepter.secondPlayer) {
+      setCountdown(() => room?.time);
+      console.log('SET BY ROOM TIME');
+      setGameData((prev) => ({
+        ...prev,
+        started: true
+      }));
+    }
+  }, [userAccepter, room?.time]);
+
+  useEffect(() => {
+    console.log(gameData.started);
+    if (gameData.started) {
+      if (countdown === 0) {
+        const roomIdNum = Number(match.params.id);
+        socket.emit('game-end', {
+          board: gameData.board,
+          roomId: roomIdNum,
+          next: gameData.next,
+          lastTick: [3, 3]
+        });
+        setUserAccepter(() => ({
+          firstPlayer: false,
+          secondPlayer: false
+        }));
+        setGameData((prev) => ({
+          ...prev,
+          started: false
+        }));
+        setClockToggle(() => false);
+        setCountdown(() => room?.time);
+      }
+    }
+  }, [gameData.started, countdown, gameData.board, gameData.next, match.params.id, room?.time]);
+
+  // const limitInterval = useRef(false);
+  useEffect(() => {
+    let interval;
+    if (clockToggle) {
+      interval = setInterval(() => {
+        setCountdown((prev) => {
+          console.log(prev);
+          if (prev === 1) {
+            clearInterval(interval);
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return () => clearInterval(interval);
+  }, [clockToggle]);
 
   const handleSendMessage = useCallback(
     (content) => {
@@ -295,6 +398,7 @@ const Room = ({ match, history }) => {
   const handleOnUserPickPosition = useCallback(
     (newPos) => {
       if (!match.params.id) return;
+      setCountdown(() => room?.time);
       if (newPos === 1) {
         setRoom((prev) => ({ ...prev, firstPlayer: user }));
         setGameData((prev) => ({
@@ -322,7 +426,7 @@ const Room = ({ match, history }) => {
         socket.emit('change-side', { roomId: match.params.id, user, side: null });
       }
     },
-    [user, match.params.id, gameData.pos]
+    [user, match.params.id, gameData.pos, room?.time]
   );
 
   const handleTick = async (i, j) => {
@@ -356,6 +460,10 @@ const Room = ({ match, history }) => {
             next: gameData.next,
             lastTick: [i, j]
           });
+          setGameData((prev) => ({
+            ...prev,
+            started: false
+          }));
         } else {
           socket.emit('room-change', {
             board: newBoard,
@@ -374,6 +482,8 @@ const Room = ({ match, history }) => {
       roomId: roomIdNum,
       next: gameData.next
     });
+    setClockToggle(() => true);
+    setCountdown(() => 10);
     socket.emit('press-start', { roomId: match.params.id, pos: gameData.pos });
   };
 
@@ -386,25 +496,27 @@ const Room = ({ match, history }) => {
 
   if (gameData.pos) {
     if (
-      room.firstPlayer &&
-      room.secondPlayer &&
+      room?.firstPlayer &&
+      room?.secondPlayer &&
       !userAccepter.firstPlayer &&
       !userAccepter.secondPlayer
     ) {
       indicator =
-        room.firstPlayer._id === user._id ? (
+        room?.firstPlayer._id === user._id ? (
           <button
             onClick={handlePressStartGame}
             type="button"
-            className="p-2 text-sm text-white bg-red-500 center-absolute">
-            {`${winner ? `${winner} ` : ''} Start game`}
+            className="flex flex-col justify-center p-2 text-sm text-white bg-red-500 center-absolute">
+            {`${winner ? `${winner} win \n` : ''} `}
+            <span>Start game</span>
           </button>
         ) : (
           <button
             onClick={handlePressStartGame}
             type="button"
-            className="p-2 text-sm text-white bg-red-500 center-absolute">
-            {`${winner ? `${winner} ` : ''} Start game`}
+            className="flex flex-col justify-center p-2 text-sm text-white bg-red-500 center-absolute">
+            {`${winner ? `${winner} win \n` : ''} `}
+            <span>Start game</span>
           </button>
         );
     }
@@ -437,7 +549,7 @@ const Room = ({ match, history }) => {
     }
 
     if (gameData.pos === 1) {
-      if (room.secondPlayer === null) {
+      if (room?.secondPlayer === null) {
         indicator = (
           <div className="p-2 text-sm text-white bg-red-500 center-absolute">
             Waiting for player
@@ -445,8 +557,9 @@ const Room = ({ match, history }) => {
         );
       }
     }
+
     if (gameData.pos === 2) {
-      if (room.firstPlayer === null) {
+      if (room?.firstPlayer === null) {
         indicator = (
           <div className="p-2 text-sm text-white bg-red-500 center-absolute">
             Waiting for player
@@ -477,6 +590,10 @@ const Room = ({ match, history }) => {
 
   const handleOk = () => {
     const roomIdNum = Number(match.params.id);
+    setGameData((prev) => ({
+      ...prev,
+      started: true
+    }));
     socket.emit('game-end', {
       board: gameData.board,
       roomId: roomIdNum,
@@ -484,19 +601,17 @@ const Room = ({ match, history }) => {
       lastTick: null,
       lose: 'draw'
     });
-    setIsModalVisible(false);
+    setUserAccepter(() => ({
+      firstPlayer: false,
+      secondPlayer: false
+    }));
   };
-
-  const handleCancel = () => {
-    setIsModalVisible(false);
-  };
-
-  console.log(room);
 
   const onSubmitPassword = async ({ password }) => {
     try {
       const data = await postCheckPassword(Number(match.params.id), password);
       setInitStatus((prev) => ({ ...prev, join: true, requirepass: false }));
+      onUserJoinRoom(user);
     } catch (err) {
       setError('password', { type: 'manual', message: 'Required.' });
     }
@@ -506,121 +621,138 @@ const Room = ({ match, history }) => {
 
   return (
     <Layout>
-      {initStatus.join && room && (
-        <div className="flex justify-center max-h-full mt-10">
-          <div className="flex flex-col w-80">
-            <UserPlay
-              pos={1}
-              currentUserPos={gameData.pos}
-              user={room.firstPlayer}
-              canLeave={!userAccepter.firstPlayer}
-              onPickPosition={handleOnUserPickPosition}
-              next={gameData.next}
-            />
-            <div className="flex-1 p-4 my-6 bg-gray-100 rounded-lg">
-              <div className="flex flex-row">
-                <button
-                  className="flex items-center px-3 py-2 font-medium text-white rounded-md bg-main"
-                  type="button"
-                  onClick={indicator ? null : handleClaimDraw}>
-                  <FaHandshake className="mr-2" /> Claim a draw
-                </button>
-                <button
-                  className="flex items-center px-3 py-2 ml-4 font-medium text-white rounded-md bg-main"
-                  type="button"
-                  onClick={handleResign}>
-                  <AiOutlineFlag className="mr-2" /> Resign
-                </button>
-              </div>
-            </div>
-            <UserPlay
-              pos={2}
-              currentUserPos={gameData.pos}
-              user={room.secondPlayer}
-              canLeave={!userAccepter.secondPlayer}
-              onPickPosition={handleOnUserPickPosition}
-              next={gameData.next}
-            />
-          </div>
-
-          <div className="flex items-center justify-center flex-shrink-0 px-3 mx-2 rounded-lg bg-board">
-            <Spin spinning={indicator !== null} indicator={indicator}>
-              <div className="play-area">
-                <Board
-                  onClick={(i, j) => handleTick(i, j)}
-                  board={gameData.board}
-                  lastTick={gameData.lastTick}
-                />
-              </div>
-            </Spin>
-          </div>
-
-          <div className="flex flex-col w-80">
-            <div className="relative flex-1 w-full">
-              <div className="absolute top-0 bottom-0 left-0 right-0">
-                <Chat messages={chat} endRef={messageRef} onMessageSend={handleSendMessage} />
-              </div>
-            </div>
-            <div className="flex-1 w-full p-2 mt-6 bg-gray-100 rounded-lg">
-              <Tabs defaultActiveKey="1" onChange={console.log}>
-                <TabPane tab="Moves" key="1">
-                  {gameData.move}
-                </TabPane>
-                <TabPane tab="In Rooms" key="2">
-                  {room.people.map((p) => (
-                    <li key={p._id} className="list-none">
-                      {p.email}
-                    </li>
-                  ))}
-                </TabPane>
-                <TabPane tab="Rules" key="3">
-                  <div className="flex">
-                    <Select defaultValue="public" style={{ width: 120 }} onChange={() => {}}>
-                      <Option value="jack">private</Option>
-                    </Select>
-                    <Input className="ml-2" placeholder="Password" />
-                  </div>
-                </TabPane>
-              </Tabs>
-            </div>
-          </div>
-          <Modal
-            title="Opponent claim a draw!"
-            visible={isModalVisible}
-            onOk={handleOk}
-            onCancel={handleCancel}
-            cancelText="Decline"
-            okText="Accept"
-          />
-        </div>
-      )}
-
-      {initStatus.requirepass && (
-        <div className="flex flex-col items-center justify-center flex-1 w-full h-full">
-          <span className="-mt-5 text-lg font-semibold text-gray-800">
-            This room requires password.
-          </span>
-          <div className="flex mt-3 ">
-            {' '}
-            <form onSubmit={handleSubmit(onSubmitPassword)}>
-              <input
-                className="w-64 px-3 py-2 border rounded-lg focus:outline-none"
-                type="password"
-                name="password"
-                ref={register({ required: 'Required' })}
-                placeholder="Input password"
+      <Spin spinning={!initStatus.init}>
+        {initStatus.join && room && (
+          <div className="flex justify-center max-h-full mt-10">
+            <div className="flex flex-col w-80">
+              <UserPlay
+                pos={1}
+                started={gameData.started}
+                countdown={countdown}
+                currentUserPos={gameData.pos}
+                user={room?.firstPlayer}
+                canLeave={!userAccepter.firstPlayer}
+                onPickPosition={handleOnUserPickPosition}
+                next={gameData.next}
               />
-              <button
-                disabled={errors.password}
-                className="h-full px-2 ml-3 font-semibold text-white rounded-lg focus:outline-none bg-main disabled:bg-gray-500"
-                type="submit">
-                Join room
-              </button>
-            </form>
+              <div className="flex-1 p-4 my-6 bg-gray-100 rounded-lg">
+                <div className="flex flex-row">
+                  <button
+                    className="flex items-center px-3 py-2 font-medium text-white rounded-md bg-main"
+                    type="button"
+                    onClick={indicator ? null : handleClaimDraw}>
+                    <FaHandshake className="mr-2" /> Claim a draw
+                  </button>
+                  <button
+                    className="flex items-center px-3 py-2 ml-4 font-medium text-white rounded-md bg-main"
+                    type="button"
+                    onClick={handleResign}>
+                    <AiOutlineFlag className="mr-2" /> Resign
+                  </button>
+                </div>
+              </div>
+              <UserPlay
+                pos={2}
+                started={gameData.started}
+                countdown={countdown}
+                currentUserPos={gameData.pos}
+                user={room?.secondPlayer}
+                canLeave={!userAccepter.secondPlayer}
+                onPickPosition={handleOnUserPickPosition}
+                next={gameData.next}
+              />
+            </div>
+
+            <div className="flex items-center justify-center flex-shrink-0 px-3 mx-2 rounded-lg bg-board">
+              <Spin spinning={indicator !== null} indicator={indicator}>
+                <div className="play-area">
+                  <Board
+                    onClick={(i, j) => handleTick(i, j)}
+                    board={gameData.board}
+                    lastTick={gameData.lastTick}
+                  />
+                </div>
+              </Spin>
+            </div>
+
+            <div className="flex flex-col w-80">
+              <div className="relative flex-1 w-full">
+                <div className="absolute top-0 bottom-0 left-0 right-0">
+                  <Chat messages={chat} endRef={messageRef} onMessageSend={handleSendMessage} />
+                </div>
+              </div>
+              <div className="flex-1 w-full p-2 mt-6 bg-gray-100 rounded-lg">
+                <Tabs defaultActiveKey="1" onChange={console.log}>
+                  <TabPane tab="Moves" key="1">
+                    asdasd
+                  </TabPane>
+                  <TabPane tab="In Rooms" key="2">
+                    {room.people.map((p) => (
+                      <li
+                        key={p._id}
+                        className="flex items-center justify-between p-2 mb-2 list-none bg-gray-200 rounded-md hover:bg-gray-300">
+                        <span> {p.email}</span>
+                        <span className="font-semibold text-yellow-600 ">{p.point}</span>
+                      </li>
+                    ))}
+                  </TabPane>
+                  <TabPane tab="Invite" key="3">
+                    <div className="flex flex-col">
+                      {onlines &&
+                        onlines
+                          .filter((el) => el._id !== user._id)
+                          .map((invite) => (
+                            <li
+                              key={invite._id}
+                              className="flex items-center justify-between p-2 mb-2 list-none bg-gray-200 rounded-md hover:bg-gray-300">
+                              <span> {invite.email}</span>
+                              <span className="font-semibold text-yellow-600 ">{invite.point}</span>
+                            </li>
+                          ))}
+                    </div>
+                  </TabPane>
+                </Tabs>
+              </div>
+            </div>
+            <Modal
+              title="Basic Modal"
+              visible={isModalVisible}
+              onOk={handleOk}
+              onCancel={handleCancel}>
+              <p>Some contents...</p>
+              <p>Some contents...</p>
+              <p>Some contents...</p>
+            </Modal>
           </div>
-          {errors.password && <span className="font-semibold text-red-600">Wrong password.</span>}
-        </div>
-      )}
+        )}
+
+        {initStatus.requirepass && (
+          <div className="flex flex-col items-center justify-center flex-1 w-full h-full">
+            <span className="-mt-5 text-lg font-semibold text-gray-800">
+              This room requires password.
+            </span>
+            <div className="flex mt-3 ">
+              {' '}
+              <form onSubmit={handleSubmit(onSubmitPassword)}>
+                <input
+                  className="w-64 px-3 py-2 border rounded-lg focus:outline-none"
+                  type="password"
+                  name="password"
+                  ref={register({ required: 'Required' })}
+                  placeholder="Input password"
+                />
+                <button
+                  disabled={errors.password}
+                  className="h-full px-2 ml-3 font-semibold text-white rounded-lg focus:outline-none bg-main disabled:bg-gray-500"
+                  type="submit">
+                  Join room
+                </button>
+              </form>
+            </div>
+            {errors.password && <span className="font-semibold text-red-600">Wrong password.</span>}
+          </div>
+        )}
+      </Spin>
     </Layout>
   );
 };

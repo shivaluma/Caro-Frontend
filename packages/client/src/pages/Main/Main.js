@@ -130,10 +130,10 @@ const Main = (props) => {
               <span className="text-lg font-medium">{`Who Is Online (${onlines.length})`}</span>
               {onlines.map((online) => (
                 <li
-                  className="p-2 list-none bg-gray-200 rounded-md"
+                  className="p-2 mb-2 list-none bg-gray-200 rounded-md"
                   onClick={() => handleUserClick(online)}
-                  key={online}>
-                  {online}
+                  key={online._id}>
+                  {online.email}
                 </li>
               ))}
             </div>

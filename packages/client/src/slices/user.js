@@ -97,7 +97,6 @@ export const signup = ({ email, password, confirmPassword }) => async (dispatch)
 export const initUserLoading = () => async (dispatch) => {
   try {
     const res = await API.get('user/me');
-    const onlines = await API.get('user/online');
 
     if (res?.data?.data) {
       await dispatch(setUser(res.data.data));
@@ -110,7 +109,14 @@ export const initUserLoading = () => async (dispatch) => {
     dispatch(change({ payload: { error: e.response.data.message } }));
     return e.response;
   } finally {
-    dispatch(changeInit());
+    try {
+      const onlines = await API.get('user/online');
+      await dispatch(initArray(onlines?.data?.data));
+    } catch (e) {
+      console.log(e.response);
+    } finally {
+      dispatch(changeInit());
+    }
   }
 };
 
