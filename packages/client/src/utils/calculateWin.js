@@ -1,3 +1,5 @@
+const size = 20;
+
 const calculateWin = async (i, j, value, board) => {
   let count = 1;
   let row = i;
@@ -5,7 +7,7 @@ const calculateWin = async (i, j, value, board) => {
 
   // check 1
   while (true) {
-    if (++column > 19) break;
+    if (++column > size - 1) break;
     if (board[row][column] !== value) break;
     count++;
     if (count === 5) return value;
@@ -26,7 +28,7 @@ const calculateWin = async (i, j, value, board) => {
 
   // check 2
   while (true) {
-    if (++row > 14) break;
+    if (++row > size - 1) break;
     if (board[row][column] !== value) break;
     count++;
     if (count === 5) return value;
@@ -48,8 +50,8 @@ const calculateWin = async (i, j, value, board) => {
 
   // check 3
   while (true) {
-    if (++row > 14) break;
-    if (++column > 19) break;
+    if (++row > size - 1) break;
+    if (++column > size - 1) break;
     if (board[row][column] !== value) break;
     count++;
     if (count === 5) return value;
@@ -72,7 +74,7 @@ const calculateWin = async (i, j, value, board) => {
 
   // check 4
   while (true) {
-    if (++row > 14) break;
+    if (++row > size - 1) break;
     if (--column < 0) break;
     if (board[row][column] !== value) break;
     count++;
@@ -84,7 +86,7 @@ const calculateWin = async (i, j, value, board) => {
 
   while (true) {
     if (--row < 0) break;
-    if (++column > 19) break;
+    if (++column > size - 1) break;
     if (board[row][column] !== value) break;
     count++;
     if (count === 5) return value;

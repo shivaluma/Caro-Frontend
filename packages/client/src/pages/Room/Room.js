@@ -34,7 +34,8 @@ const Room = ({ match, history }) => {
     pos: null,
     userTurn: null,
     lastTick: null,
-    started: false
+    started: false,
+    move: []
   });
 
   const [initStatus, setInitStatus] = useState({
@@ -51,23 +52,7 @@ const Room = ({ match, history }) => {
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentTab, setCurrentTab] = useState('1');
-
-  const [clockToggle, setClockToggle] = useState(false);
-  const handleOk = () => {
-    // const roomIdNum = Number(match.params.id);
-    // socket.emit('game-end', {
-    //   board: gameData.board,
-    //   roomId: roomIdNum,
-    //   next: gameData.next,
-    //   lastTick: null,
-    //   win: user
-    // });
-    setIsModalVisible(false);
-  };
-
-  const handleCancel = () => {
-    setIsModalVisible(false);
-  };
+  const [password, setPassword] = useState('');
 
   const onUserJoinRoom = useCallback((user) => {
     setRoom((prev) => ({
@@ -155,13 +140,14 @@ const Room = ({ match, history }) => {
         userTurn
       }));
     });
-    socket.on('room-changed', ({ board, next, user, lastTick }) => {
+    socket.on('room-change-cli', ({ board, next, user, lastTick, move }) => {
       setGameData((prev) => ({
         ...prev,
         board,
         next: !next,
         userTurn: user,
-        lastTick
+        lastTick,
+        move
       }));
       console.log('Room changed');
       setCountdown(() => 30);
@@ -179,14 +165,20 @@ const Room = ({ match, history }) => {
       setClockToggle(() => true);
     });
 
-    socket.on('game-ended', ({ board, next, lastTick }) => {
+    socket.on('game-end-cli', ({ board, next, lastTick, move }) => {
+      if (next === null) {
+        setWinner('Draw');
+      } else {
+        setWinner(next === true ? 'Player 1 win' : 'Player 2 win');
+      }
       setGameData((prev) => ({
         ...prev,
         board,
         next,
         started: false,
         userTurn: null,
-        lastTick
+        lastTick,
+        move
       }));
       setWinner(lastTick === 'O' ? 'Player 1' : 'Player 2');
       setCountdown(() => room?.time);
@@ -197,8 +189,7 @@ const Room = ({ match, history }) => {
       }));
     });
 
-    socket.on('claim-draw-cli', ({ test }) => {
-      console.log(test);
+    socket.on('claim-draw-cli', () => {
       setIsModalVisible(true);
     });
 
@@ -395,7 +386,7 @@ const Room = ({ match, history }) => {
     }
 
     return () => clearInterval(interval);
-  }, [clockToggle]);
+  }, []);
 
   const handleSendMessage = useCallback(
     (content) => {
@@ -579,10 +570,25 @@ const Room = ({ match, history }) => {
   }
 
   const handleClaimDraw = () => {
-    socket.emit('claim-draw', { roomId: match.params.id });
+    if (gameData.userTurn._id === user._id) {
+      socket.emit('claim-draw', { roomId: match.params.id });
+    }
   };
 
   const handleResign = () => {
+    if (gameData.lastTick) {
+      const roomIdNum = Number(match.params.id);
+      socket.emit('game-end', {
+        board: gameData.board,
+        roomId: roomIdNum,
+        next: gameData.next,
+        lastTick: null,
+        lose: user
+      });
+    }
+  };
+
+  const handleOk = () => {
     const roomIdNum = Number(match.params.id);
     setGameData((prev) => ({
       ...prev,
@@ -593,7 +599,7 @@ const Room = ({ match, history }) => {
       roomId: roomIdNum,
       next: gameData.next,
       lastTick: null,
-      lose: user
+      lose: 'draw'
     });
     setUserAccepter(() => ({
       firstPlayer: false,
