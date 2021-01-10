@@ -1,3 +1,6 @@
+/* eslint-disable jsx-a11y/no-static-element-interactions */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
+/* eslint-disable react/jsx-wrap-multilines */
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import clsx from 'clsx';
@@ -5,12 +8,14 @@ import clsx from 'clsx';
 import { useDispatch } from 'react-redux';
 import { Result } from 'antd';
 import { signup } from 'slices/user';
+import { resendActiveEmail } from 'services/user';
 import { useLoading } from '../../hooks';
 
 const RegisterForm = ({ changeMode }) => {
   const { handleSubmit, register, errors, setError } = useForm();
   const [isRegisterSuccess, setRegisterSuccess] = useState(false);
   const [isLoading, changeLoading] = useLoading();
+  const [email, setEmail] = useState('');
   const dispatch = useDispatch();
   // function sleep(ms) {
   //   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -28,16 +33,39 @@ const RegisterForm = ({ changeMode }) => {
         })
       );
     } else {
+      setEmail(values.email);
       setRegisterSuccess(true);
     }
     changeLoading();
+  };
+
+  const onResendEmailHandler = async () => {
+    try {
+      await resendActiveEmail(email);
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   return isRegisterSuccess ? (
     <Result
       status="success"
       title="Register Success"
-      subTitle="You could login using your account right now."
+      subTitle={
+        <div className="flex flex-col">
+          <span>
+            We have sent you an email for verification, please check the email and do the
+            instructions.
+          </span>
+          <span className="mt-2">
+            If you not receive any email,{' '}
+            <span className="text-blue-500 cursor-pointer" onClick={onResendEmailHandler}>
+              click here
+            </span>
+            .
+          </span>
+        </div>
+      }
       extra={[
         <button
           key="backtologin"

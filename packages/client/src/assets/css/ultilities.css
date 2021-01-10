@@ -347,10 +347,10 @@ button::focus {
   margin-top: 12px;
 }
 .chat .chat-history {
-  padding: 30px 30px 20px;
+  padding: 10px 10px 10px;
   border-bottom: 2px solid white;
+  border-radius: 10px;
   overflow-y: scroll;
-  height: 50vh;
 }
 .chat .chat-history .message-data {
   margin-bottom: 15px;
@@ -489,6 +489,7 @@ button::focus {
 }
 
 .scroll-children {
+  height: calc(100% - 80px);
   max-height: calc(100% - 80px);
   overflow-y: scroll;
 }
@@ -540,4 +541,37 @@ button::focus {
 
 .ant-spin.ant-spin-spinning {
   max-height: 99999px !important;
+}
+
+@keyframes blink {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+@-webkit-keyframes blink {
+  from {
+    opacity: 0.3;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.blink {
+  animation: blink 1.5s infinite;
+  -webkit-animation: blink 1.5s infinite;
+}
+
+.gradient-background {
+  background: linear-gradient(
+    to top right,
+    rgba(255, 82, 99, 0.9) 10%,
+    rgba(255, 115, 129, 0.9) 65%,
+    rgba(252, 189, 1, 0.9) 125%
+  );
 }

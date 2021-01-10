@@ -21,6 +21,10 @@ const userSlice = createSlice({
       }, 100);
       return action.payload;
     },
+    updateRoom(state, action) {
+      state.room = action.payload;
+      return state;
+    },
     removeUser(state) {
       socket.emit('user-offline', state);
       return null;
@@ -28,10 +32,14 @@ const userSlice = createSlice({
   }
 });
 
-export const { setUser, removeUser } = userSlice.actions;
+export const { setUser, removeUser, updateRoom } = userSlice.actions;
 
 export default userSlice.reducer;
 // Actions
+
+export const changeRoom = (roomId) => async (dispatch) => {
+  dispatch(updateRoom(roomId));
+};
 
 export const signin = ({ email, password }) => async (dispatch) => {
   const res = await API.post('auth/signin', {

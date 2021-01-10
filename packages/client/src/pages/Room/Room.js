@@ -7,14 +7,21 @@ import { Spin } from 'antd';
 import { RoomService } from 'services';
 import { AiOutlineFlag } from 'react-icons/ai';
 import { FaHandshake } from 'react-icons/fa';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import socket from 'configs/socket';
+import { Modal, Tabs } from 'antd';
 import calculateWin from 'utils/calculateWin';
-import { Modal } from 'antd';
+import { Select, Input } from 'antd';
+import { useForm } from 'react-hook-form';
+import { changeRoom } from 'slices/user';
+import { postCheckPassword } from 'services/room';
 import { Chat, UserPlay, Board } from './components';
 
-const Room = ({ match }) => {
-  // const dispatch = useDispatch();
+const { Option } = Select;
+
+const { TabPane } = Tabs;
+const Room = ({ match, history }) => {
+  const dispatch = useDispatch();
 
   // eslint-disable-next-line no-unused-vars
   const messageRef = useRef(null);
@@ -27,13 +34,50 @@ const Room = ({ match }) => {
     pos: null,
     userTurn: null,
     lastTick: null,
-    started: false
+    started: false,
+    move: []
+  });
+
+  const [initStatus, setInitStatus] = useState({
+    init: false,
+    requirepass: false,
+    join: false
   });
 
   const [countdown, setCountdown] = useState(null);
   const [userAccepter, setUserAccepter] = useState({ firstPlayer: false, secondPlayer: false });
+
   const user = useSelector((state) => state.user);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [currentTab, setCurrentTab] = useState('1');
+  const [password, setPassword] = useState('');
+
+  const handleLeaveRoomClick = useCallback(() => {
+    dispatch(changeRoom(null));
+    socket.emit('user-leave-room', { roomId: Number(match.params.id), user });
+    socket.emit('change-side', { roomId: match.params.id, user, side: null });
+    history.push('/');
+  }, [history, user, match.params.id, dispatch]);
+
+  useEffect(() => {
+    if (initStatus.join) return;
+    if (room && user) {
+      if (!room.password || room.people.findIndex((u) => u._id === user._id) !== -1) {
+        setInitStatus(() => ({
+          init: true,
+          requirepass: false,
+          join: true
+        }));
+        return;
+      }
+      if (room.password && room.people.findIndex((u) => u._id === user._id) === -1) {
+        setInitStatus(() => ({
+          init: true,
+          requirepass: true
+        }));
+      }
+    }
+  }, [room, user, initStatus.join]);
 
   const Layout = useMemo(
     () =>
@@ -43,12 +87,39 @@ const Room = ({ match }) => {
           <div key="leftHeader" className="ml-2 text-xl font-medium text-gray-800">
             {match.params.id !== null && `Room #${match.params.id}`}
           </div>
+        ),
+        right: () => (
+          <button
+            type="button"
+            key="right"
+            onClick={handleLeaveRoomClick}
+            className="px-3 py-2 mr-2 font-semibold border-2 rounded-full text-main border-main">
+            Leave Room
+          </button>
         )
       }),
-    [match.params.id]
+    [match.params.id, handleLeaveRoomClick]
   );
 
+  const onUserJoinRoom = useCallback((user) => {
+    setRoom((prev) => ({
+      ...prev,
+      people: [...prev.people, user]
+    }));
+  }, []);
+
+  const onUserLeaveRoom = useCallback((user) => {
+    setRoom((prev) => ({
+      ...prev,
+      people: prev.people.filter((p) => p._id !== user._id)
+    }));
+  }, []);
+
+  const hasRunRef = useRef(false);
   useEffect(() => {
+    if (!initStatus.init) return;
+    if (hasRunRef.current) return;
+    hasRunRef.current = true;
     socket.on('player-change-side', ({ user, side, leaveSide, userTurn }) => {
       if (side === 1) {
         setRoom((prev) => ({ ...prev, firstPlayer: user }));
@@ -66,13 +137,14 @@ const Room = ({ match }) => {
         userTurn
       }));
     });
-    socket.on('room-changed', ({ board, next, user, lastTick }) => {
+    socket.on('room-change-cli', ({ board, next, user, lastTick, move }) => {
       setGameData((prev) => ({
         ...prev,
         board,
         next: !next,
         userTurn: user,
-        lastTick
+        lastTick,
+        move
       }));
     });
 
@@ -85,7 +157,7 @@ const Room = ({ match }) => {
       setCountdown(() => 10);
     });
 
-    socket.on('game-ended', ({ board, next, lastTick }) => {
+    socket.on('game-end-cli', ({ board, next, lastTick, move }) => {
       if (next === null) {
         setWinner('Draw');
       } else {
@@ -96,7 +168,8 @@ const Room = ({ match }) => {
         board,
         next: !next || true,
         userTurn: null,
-        lastTick
+        lastTick,
+        move
       }));
 
       setUserAccepter(() => ({
@@ -105,8 +178,7 @@ const Room = ({ match }) => {
       }));
     });
 
-    socket.on('claim-draw-cli', ({ test }) => {
-      console.log(test);
+    socket.on('claim-draw-cli', () => {
       setIsModalVisible(true);
     });
 
@@ -115,8 +187,30 @@ const Room = ({ match }) => {
       if (!messageRef.current) return;
       messageRef.current.scrollIntoView({ behavior: 'smooth' });
     });
-  }, []);
 
+    socket.on('user-join-room', (user) => {
+      setChat((prev) => [
+        ...prev,
+        { sender: 'Admin', content: `New user has joined the room : ${user.email}` }
+      ]);
+
+      onUserJoinRoom(user);
+      if (!messageRef.current) return;
+      messageRef.current.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    socket.on('user-leave-room', (user) => {
+      setChat((prev) => [
+        ...prev,
+        { sender: 'Admin', content: `A user has leaved the room : ${user.email}` }
+      ]);
+      onUserLeaveRoom(user);
+      if (!messageRef.current) return;
+      messageRef.current.scrollIntoView({ behavior: 'smooth' });
+    });
+  }, [initStatus.init, onUserJoinRoom, onUserLeaveRoom]);
+
+  console.log(room);
   useEffect(() => {
     const roomIdNum = Number(match.params.id);
     if (!Number.isInteger(roomIdNum) || roomIdNum < 0 || roomIdNum >= 20) {
@@ -124,10 +218,26 @@ const Room = ({ match }) => {
     }
     (async () => {
       const room = await RoomService.getRoomById(roomIdNum, 'public');
+      if (!room.data) {
+        history.replace('/');
+      }
       setRoom(() => room.data);
-      setChat(room?.data?.chats || []);
+
+      const initChat =
+        room?.data?.owner?._id === user._id
+          ? [
+              {
+                sender: 'Admin',
+                content: 'Your are the owner of this room, you can change the game settings.',
+                createdAt: new Date()
+              }
+            ]
+          : [];
+
+      setChat(room?.data?.chats.length > 0 ? room?.data?.chats : [...initChat]);
 
       const next = room?.data?.next != null ? !room.data.next : true;
+
       setGameData((prev) => ({
         ...prev,
         board: room?.data?.board || new Array(20).fill(new Array(20).fill(null)),
@@ -141,11 +251,24 @@ const Room = ({ match }) => {
         firstPlayer: room?.data?.ready?.firstPlayer || false,
         secondPlayer: room?.data?.ready?.secondPlayer || false
       }));
-
-      socket.emit('join-room', { roomId: roomIdNum, user });
     })();
     // eslint-disable-next-line
   }, [match.params.id]);
+
+  useEffect(() => {
+    if (initStatus.join) {
+      const roomIdNum = Number(match.params.id);
+
+      socket.emit('join-room', { roomId: roomIdNum, user });
+    }
+  }, [initStatus.join, user, match.params.id, dispatch]);
+
+  useEffect(() => {
+    if (initStatus.join) {
+      const roomIdNum = Number(match.params.id);
+      dispatch(changeRoom(roomIdNum));
+    }
+  }, [initStatus.join, match.params.id, dispatch]);
 
   useEffect(() => {
     if (room && user) {
@@ -368,9 +491,22 @@ const Room = ({ match }) => {
     setIsModalVisible(false);
   };
 
+  console.log(room);
+
+  const onSubmitPassword = async ({ password }) => {
+    try {
+      const data = await postCheckPassword(Number(match.params.id), password);
+      setInitStatus((prev) => ({ ...prev, join: true, requirepass: false }));
+    } catch (err) {
+      setError('password', { type: 'manual', message: 'Required.' });
+    }
+  };
+
+  const { handleSubmit, register, errors, setError } = useForm();
+
   return (
     <Layout>
-      {room && (
+      {initStatus.join && room && (
         <div className="flex justify-center max-h-full mt-10">
           <div className="flex flex-col w-80">
             <UserPlay
@@ -419,8 +555,34 @@ const Room = ({ match }) => {
             </Spin>
           </div>
 
-          <div className="w-80">
-            <Chat messages={chat} endRef={messageRef} onMessageSend={handleSendMessage} />
+          <div className="flex flex-col w-80">
+            <div className="relative flex-1 w-full">
+              <div className="absolute top-0 bottom-0 left-0 right-0">
+                <Chat messages={chat} endRef={messageRef} onMessageSend={handleSendMessage} />
+              </div>
+            </div>
+            <div className="flex-1 w-full p-2 mt-6 bg-gray-100 rounded-lg">
+              <Tabs defaultActiveKey="1" onChange={console.log}>
+                <TabPane tab="Moves" key="1">
+                  {gameData.move}
+                </TabPane>
+                <TabPane tab="In Rooms" key="2">
+                  {room.people.map((p) => (
+                    <li key={p._id} className="list-none">
+                      {p.email}
+                    </li>
+                  ))}
+                </TabPane>
+                <TabPane tab="Rules" key="3">
+                  <div className="flex">
+                    <Select defaultValue="public" style={{ width: 120 }} onChange={() => {}}>
+                      <Option value="jack">private</Option>
+                    </Select>
+                    <Input className="ml-2" placeholder="Password" />
+                  </div>
+                </TabPane>
+              </Tabs>
+            </div>
           </div>
           <Modal
             title="Opponent claim a draw!"
@@ -430,6 +592,33 @@ const Room = ({ match }) => {
             cancelText="Decline"
             okText="Accept"
           />
+        </div>
+      )}
+
+      {initStatus.requirepass && (
+        <div className="flex flex-col items-center justify-center flex-1 w-full h-full">
+          <span className="-mt-5 text-lg font-semibold text-gray-800">
+            This room requires password.
+          </span>
+          <div className="flex mt-3 ">
+            {' '}
+            <form onSubmit={handleSubmit(onSubmitPassword)}>
+              <input
+                className="w-64 px-3 py-2 border rounded-lg focus:outline-none"
+                type="password"
+                name="password"
+                ref={register({ required: 'Required' })}
+                placeholder="Input password"
+              />
+              <button
+                disabled={errors.password}
+                className="h-full px-2 ml-3 font-semibold text-white rounded-lg focus:outline-none bg-main disabled:bg-gray-500"
+                type="submit">
+                Join room
+              </button>
+            </form>
+          </div>
+          {errors.password && <span className="font-semibold text-red-600">Wrong password.</span>}
         </div>
       )}
     </Layout>

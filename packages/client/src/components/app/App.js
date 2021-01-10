@@ -3,7 +3,7 @@ import { useEffect, lazy, useRef } from 'react';
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Modal } from 'antd';
-import { Auth } from 'pages';
+import { ActiveAccount, Auth } from 'pages';
 import socket from 'configs/socket';
 import 'assets/css/tailwind.css';
 
@@ -14,7 +14,7 @@ import { initUserLoading } from 'slices/user';
 import ProtectedRoute from 'components/ProtectedRoute';
 import { Main, Room } from 'pages';
 import { addItem, removeItem } from 'slices/online';
-import { Profile } from 'pages';
+import { Profile, ForgotPassword } from 'pages';
 
 function App() {
   const dispatch = useDispatch();
@@ -68,7 +68,10 @@ function App() {
           <ProtectedRoute exact path="/" component={Main} />
 
           <Route exact path="/login" component={Auth} />
+          <Route exact path="/forgot-password" component={ForgotPassword} />
+          <Route exact path="/active-account" component={ActiveAccount} />
           <Route path="/profile/:id" component={Profile} />
+
           <ProtectedRoute path="/:id" component={Room} />
         </Switch>
       </Suspense>
