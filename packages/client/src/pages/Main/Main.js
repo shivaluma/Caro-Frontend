@@ -11,7 +11,7 @@ import clsx from 'clsx';
 import { FaTrophy } from 'react-icons/fa';
 import { Spin, Modal, Avatar, Select } from 'antd';
 import { ImTrophy } from 'react-icons/im';
-import { AddButton, GameButton } from './components';
+import { AddButton, GameButton, QuickMatchButton } from './components';
 
 const { Option } = Select;
 const Main = (props) => {
@@ -87,6 +87,15 @@ const Main = (props) => {
     setNewRoomData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleQuickMatch = useCallback(() => {
+    socket.emit('quick-match', { user, option: { password: '', time: 30 } });
+    socket.on('quick-match-cli', ({ roomId }) => {
+      if (roomId != null) {
+        history.push(`/${roomId}`);
+      }
+    });
+  }, [user, history]);
+
   const Layout = useMemo(
     () =>
       // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -98,9 +107,14 @@ const Main = (props) => {
             </div>
           </div>
         ),
-        right: () => <AddButton handleClick={handleOpenCreateRoomModal} />
+        right: () => (
+          <>
+            <QuickMatchButton handleClick={handleQuickMatch} />
+            <AddButton handleClick={handleOpenCreateRoomModal} />
+          </>
+        )
       }),
-    [rooms.length, handleOpenCreateRoomModal]
+    [rooms.length, handleOpenCreateRoomModal, handleQuickMatch]
   );
 
   return (
