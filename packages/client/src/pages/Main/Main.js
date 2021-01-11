@@ -11,6 +11,7 @@ import clsx from 'clsx';
 import { FaTrophy } from 'react-icons/fa';
 import { Spin, Modal, Avatar, Select } from 'antd';
 import { ImTrophy } from 'react-icons/im';
+import { ImCancelCircle } from 'react-icons/im';
 import { AddButton, GameButton, QuickMatchButton } from './components';
 
 const { Option } = Select;
@@ -23,6 +24,9 @@ const Main = (props) => {
   const [modalData, setModalData] = useState({ show: false, player: null });
   const [newRoomData, setNewRoomData] = useState({ password: '', time: 30 });
   const [newRoomModalShow, setNewRoomModalShow] = useState(false);
+  const [findMode, setFindMode] = useState(false);
+  const [countup, setCountup] = useState(1);
+
   const history = useHistory();
   useEffect(() => {
     (async () => {
@@ -50,6 +54,22 @@ const Main = (props) => {
       history.push(`/${data.room.roomId}`);
     });
   }, [history]);
+
+  useEffect(() => {
+    let interval;
+    if (findMode) {
+      interval = setInterval(() => {
+        setCountup((prev) => {
+          if (!findMode) {
+            clearInterval(interval);
+          }
+          return prev + 1;
+        });
+      }, 1000);
+    }
+
+    return () => clearInterval(interval);
+  }, [findMode]);
 
   const handleOpenCreateRoomModal = useCallback(() => {
     setNewRoomModalShow(true);
@@ -88,6 +108,7 @@ const Main = (props) => {
   };
 
   const handleQuickMatch = useCallback(() => {
+    setFindMode(true);
     socket.emit('quick-match', { user, option: { password: '', time: 30 } });
     socket.on('quick-match-cli', ({ roomId }) => {
       if (roomId != null) {
@@ -95,6 +116,13 @@ const Main = (props) => {
       }
     });
   }, [user, history]);
+
+  const handleCancelFindMatch = useCallback(() => {
+    socket.emit('cancel-quick-match', { user });
+    socket.off('quick-match-cli');
+    setFindMode(false);
+    setCountup(1);
+  }, [user]);
 
   const Layout = useMemo(
     () =>
@@ -109,12 +137,29 @@ const Main = (props) => {
         ),
         right: () => (
           <>
-            <QuickMatchButton handleClick={handleQuickMatch} />
+            {findMode ? (
+              <button
+                onClick={handleCancelFindMatch}
+                type="button"
+                className="flex flex-row items-center p-2 px-3 py-2 mr-2 font-semibold border-2 rounded-full text-main border-main focus:outline-none">
+                Finding match: {countup}
+                <ImCancelCircle className="ml-1" />
+              </button>
+            ) : (
+              <QuickMatchButton handleClick={handleQuickMatch} />
+            )}
             <AddButton handleClick={handleOpenCreateRoomModal} />
           </>
         )
       }),
-    [rooms.length, handleOpenCreateRoomModal, handleQuickMatch]
+    [
+      rooms.length,
+      handleOpenCreateRoomModal,
+      handleQuickMatch,
+      handleCancelFindMatch,
+      findMode,
+      countup
+    ]
   );
 
   return (

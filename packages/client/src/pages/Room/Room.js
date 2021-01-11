@@ -389,7 +389,6 @@ const Room = ({ match, history }) => {
     if (clockToggle) {
       interval = setInterval(() => {
         setCountdown((prev) => {
-          console.log(prev);
           if (prev === 1) {
             clearInterval(interval);
           }
