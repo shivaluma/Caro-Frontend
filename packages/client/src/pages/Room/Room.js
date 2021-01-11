@@ -156,7 +156,6 @@ const Room = ({ match, history }) => {
         lastTick,
         move
       }));
-      console.log('Room changed');
       setCountdown(() => 30);
     });
 
@@ -173,6 +172,7 @@ const Room = ({ match, history }) => {
     });
 
     socket.on('game-end-cli', ({ board, next, lastTick, move }) => {
+      console.log('alo:', next);
       if (next === null) {
         setWinner('Draw');
       } else {
@@ -187,7 +187,6 @@ const Room = ({ match, history }) => {
         lastTick,
         move
       }));
-      setWinner(lastTick === 'O' ? 'Player 1' : 'Player 2');
       setCountdown(() => room?.time);
       setClockToggle(() => false);
       setUserAccepter(() => ({
@@ -522,7 +521,7 @@ const Room = ({ match, history }) => {
             onClick={handlePressStartGame}
             type="button"
             className="flex flex-col justify-center p-2 text-sm text-white bg-red-500 center-absolute">
-            {`${winner ? `${winner} win \n` : ''} `}
+            {`${winner ? `${winner} \n` : ''} `}
             <span>Start game</span>
           </button>
         ) : (
@@ -530,7 +529,7 @@ const Room = ({ match, history }) => {
             onClick={handlePressStartGame}
             type="button"
             className="flex flex-col justify-center p-2 text-sm text-white bg-red-500 center-absolute">
-            {`${winner ? `${winner} win \n` : ''} `}
+            {`${winner ? `${winner} \n` : ''} `}
             <span>Start game</span>
           </button>
         );
@@ -614,12 +613,13 @@ const Room = ({ match, history }) => {
       roomId: roomIdNum,
       next: gameData.next,
       lastTick: null,
-      lose: null
+      lose: 'draw'
     });
     setUserAccepter(() => ({
       firstPlayer: false,
       secondPlayer: false
     }));
+    setIsModalVisible(false);
   };
 
   const onSubmitPassword = async ({ password }) => {
