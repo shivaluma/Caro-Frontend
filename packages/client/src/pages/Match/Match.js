@@ -7,13 +7,11 @@ import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { useLayout } from 'hooks';
 import { Spin } from 'antd';
 import { Tabs } from 'antd';
-import { Select } from 'antd';
+import { RoomService } from 'services';
 import { Chat, UserPlay, Board } from './components';
 
 const { TabPane } = Tabs;
 const Match = ({ match }) => {
-  const dispatch = useDispatch();
-
   // eslint-disable-next-line no-unused-vars
   const [gameData, setGameData] = useState(null);
 
@@ -31,7 +29,15 @@ const Match = ({ match }) => {
   );
 
   useEffect(() => {
-    // eslint-disable-next-line
+    if (!match.params.id) return;
+    (async () => {
+      try {
+        const data = await RoomService.getMatchById(match.params.id);
+        setGameData(data?.data);
+      } catch (error) {
+        console.log(error);
+      }
+    })();
   }, [match.params.id]);
 
   return (
@@ -40,8 +46,8 @@ const Match = ({ match }) => {
         {gameData && (
           <div className="flex justify-center max-h-full mt-10">
             <div className="flex flex-col w-80">
-              <UserPlay user={gameData.firstPlayer} />
-              <UserPlay user={gameData.secondPlayer} />
+              <UserPlay user={gameData.firstPlayer} winner={gameData.winner} />
+              <UserPlay user={gameData.secondPlayer} winner={gameData.winner} />
             </div>
 
             <div className="flex items-center justify-center flex-shrink-0 px-3 mx-2 rounded-lg bg-board">

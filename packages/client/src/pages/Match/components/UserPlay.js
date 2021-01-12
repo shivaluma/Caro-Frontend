@@ -2,10 +2,11 @@
 import React from 'react';
 import { Avatar } from 'antd';
 import { ImTrophy } from 'react-icons/im';
+import clsx from 'clsx';
 
-export default function UserPlay({ user }) {
+export default function UserPlay({ user, winner }) {
   return (
-    <div className="relative flex flex-col items-center justify-center w-full h-64 bg-gray-100 border-pink-500 rounded-md">
+    <div className="relative flex flex-col items-center justify-center w-full h-64 bg-gray-100 border-2 border-pink-500 rounded-md'">
       {user ? (
         <>
           <Avatar
@@ -21,6 +22,17 @@ export default function UserPlay({ user }) {
           <span className="flex items-center mt-2 text-xs text-yellow-600">
             {user.point || 0}
             <ImTrophy className="ml-1" />
+          </span>
+          <span
+            className={clsx(
+              'px-3 py-2 font-semibold text-white rounded-md mt-1',
+              // eslint-disable-next-line no-nested-ternary
+              user._id === winner._id ? 'bg-green-600' : winner ? 'bg-red-600' : 'bg-yellow-600'
+            )}>
+            {
+              // eslint-disable-next-line no-nested-ternary
+              user._id === winner._id ? 'WIN' : winner ? 'LOSE' : 'DRAW'
+            }
           </span>
         </>
       ) : null}

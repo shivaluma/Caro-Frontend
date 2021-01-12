@@ -90,7 +90,7 @@ const Profile = (props) => {
                     onClick={() => history.push(`/match/${game._id}`)}
                     type="button"
                     key={game._id}
-                    className="flex items-center p-6 mt-3 bg-gray-100 rounded-lg focus:outline-none">
+                    className="flex items-center w-full p-6 mt-3 bg-gray-100 rounded-lg focus:outline-none">
                     <span
                       className={clsx(
                         'px-3 py-2 font-semibold text-white rounded-md',
