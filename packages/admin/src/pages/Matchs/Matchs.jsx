@@ -1,8 +1,29 @@
 /* eslint-disable no-restricted-globals */
 /* eslint-disable react/display-name */
 import { Table, Tag, Button, Space } from 'antd';
+import { useEffect, useState } from 'react';
+import API from 'api';
+import dayjs from 'utils/day';
 
 const Match = ({ history }) => {
+  const [matches, setMatches] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await API.get('/matchs');
+
+        setMatches(data.data);
+        // eslint-disable-next-line no-empty
+      } catch (err) {
+        console.log(err);
+      } finally {
+        setLoading(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const columns = [
     {
       title: 'ID',
@@ -39,7 +60,7 @@ const Match = ({ history }) => {
       title: 'Created At',
       dataIndex: 'createAt',
       key: 'createAt',
-      render: (text, record) => <span>{record.createAt} </span>
+      render: (text, record) => <span>{dayjs(record.createAt).fromNow()} </span>
     },
     {
       title: 'Action',
@@ -55,41 +76,11 @@ const Match = ({ history }) => {
     }
   ];
 
-  const dataSource = [
-    {
-      _id: '5ffad6cb03550922120978fc',
-      firstPlayer: { displayName: 'asdasd' },
-      secondPlayer: { displayName: 'asdasd2' },
-      chats: null,
-      winner: { displayName: 'asdasd' },
-      board: null,
-      createAt: new Date().toISOString()
-    },
-    {
-      _id: '5ffad6cb03550922120978fc',
-      firstPlayer: { displayName: 'asdasd' },
-      secondPlayer: { displayName: 'asdasd2' },
-      chats: null,
-      winner: { displayName: 'asdasd2' },
-      board: null,
-      createAt: new Date().toISOString()
-    },
-    {
-      _id: '5ffad6cb03550922120978fc',
-      firstPlayer: { displayName: 'asdasd' },
-      secondPlayer: { displayName: 'asdasd2' },
-      chats: null,
-      winner: { displayName: 'asdasd' },
-      board: null,
-      createAt: new Date().toISOString()
-    }
-  ];
-
   return (
     <div className="flex ">
       <div className="w-full">
         <span className="text-lg font-semibold">All Matches</span>
-        <Table dataSource={dataSource} columns={columns} />
+        <Table loading={loading} dataSource={matches} columns={columns} />
       </div>
     </div>
   );

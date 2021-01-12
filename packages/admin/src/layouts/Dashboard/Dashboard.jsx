@@ -1,10 +1,16 @@
 import { Suspense, useState } from 'react';
-import { Layout, Menu, Avatar, Spin } from 'antd';
+import { Layout, Menu, Avatar, Spin, Button } from 'antd';
 import { renderRoutes } from 'react-router-config';
 import { UserOutlined, VideoCameraOutlined } from '@ant-design/icons';
+import { useUser } from 'context/configureContext';
 
 const { Header, Content, Footer, Sider } = Layout;
 const Dashboard = ({ route, location, history }) => {
+  const context = useUser();
+  const handleLogout = () => {
+    context.dispatch({ type: 'REMOVE_USER' });
+    localStorage.removeItem('whatisthis-admin');
+  };
   return (
     <Layout>
       <Sider
@@ -43,8 +49,14 @@ const Dashboard = ({ route, location, history }) => {
         </Menu>
       </Sider>
       <Layout className="site-layout" style={{ marginLeft: 200 }}>
-        <Header className="site-layout-background" style={{ padding: 0 }}>
+        <Header
+          className="flex items-center justify-between site-layout-background"
+          style={{ padding: 0 }}>
           <span className="ml-6 text-lg font-semibold">{route.title}</span>
+
+          <Button className="mr-6" type="primary" onClick={handleLogout}>
+            Logout
+          </Button>
         </Header>
         <Content
           style={{
