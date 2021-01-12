@@ -3,9 +3,11 @@ import { ImTrophy } from 'react-icons/im';
 import { useLayout } from 'hooks';
 import { useMemo, useEffect, useState } from 'react';
 import { UserService } from 'services';
+import { useHistory } from 'react-router-dom';
 import clsx from 'clsx';
 
 const Profile = (props) => {
+  const history = useHistory();
   const Layout = useMemo(
     () =>
       // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -85,6 +87,7 @@ const Profile = (props) => {
               {games &&
                 games.map((game) => (
                   <button
+                    onClick={() => history.push(`/match/${game._id}`)}
                     type="button"
                     key={game._id}
                     className="flex items-center p-6 mt-3 bg-gray-100 rounded-lg focus:outline-none">
