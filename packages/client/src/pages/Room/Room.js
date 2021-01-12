@@ -1,3 +1,5 @@
+/* eslint-disable jsx-a11y/click-events-have-key-events */
+/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 /* eslint-disable no-constant-condition */
 /* eslint-disable no-nested-ternary */
 /* eslint-disable react/display-name */
@@ -15,12 +17,14 @@ import { Select, Input } from 'antd';
 import { useForm } from 'react-hook-form';
 import { changeRoom } from 'slices/user';
 import { postCheckPassword } from 'services/room';
+import { useDebounce } from 'hooks';
+import clsx from 'clsx';
 import { Chat, UserPlay, Board } from './components';
 
 const { Option } = Select;
 
 const { TabPane } = Tabs;
-const Room = ({ match, history }) => {
+const Room = ({ match, history, location }) => {
   const dispatch = useDispatch();
 
   // eslint-disable-next-line no-unused-vars
@@ -40,7 +44,7 @@ const Room = ({ match, history }) => {
 
   const [initStatus, setInitStatus] = useState({
     init: false,
-    requirepass: false,
+    requirepass: location?.state?.requirepass,
     join: false
   });
 
@@ -52,8 +56,11 @@ const Room = ({ match, history }) => {
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentTab, setCurrentTab] = useState('1');
-
+  const [nameFilter, setNameFilter] = useState('');
+  const [searchFilter, setSearchFilter] = useState([]);
   const [clockToggle, setClockToggle] = useState(false);
+  const [inviteList, setInviteList] = useState({});
+  const nameFilterDebounce = useDebounce(nameFilter, 300);
   const onUserJoinRoom = useCallback((user) => {
     setRoom((prev) => ({
       ...prev,
@@ -69,9 +76,17 @@ const Room = ({ match, history }) => {
   }, [history, user, match.params.id, dispatch]);
 
   useEffect(() => {
+    setSearchFilter(() => onlines.filter((el) => el.displayName.includes(nameFilterDebounce)));
+  }, [nameFilterDebounce, onlines]);
+
+  useEffect(() => {
     if (initStatus.join) return;
     if (room && user) {
-      if (!room.password || room.people.findIndex((u) => u._id === user._id) !== -1) {
+      if (
+        location?.state?.requirepass === false ||
+        !room.password ||
+        room.people.findIndex((u) => u._id === user._id) !== -1
+      ) {
         setInitStatus(() => ({
           init: true,
           requirepass: false,
@@ -94,7 +109,7 @@ const Room = ({ match, history }) => {
         }));
       }
     }
-  }, [room, user, initStatus.join]);
+  }, [room, user, initStatus.join, location?.state?.requirepass]);
 
   const Layout = useMemo(
     () =>
@@ -218,6 +233,7 @@ const Room = ({ match, history }) => {
     });
 
     socket.on('user-leave-room', (user) => {
+      console.log(user);
       setChat((prev) => [
         ...prev,
         { sender: 'Admin', content: `A user has leaved the room : ${user.email}` }
@@ -226,6 +242,17 @@ const Room = ({ match, history }) => {
       if (!messageRef.current) return;
       messageRef.current.scrollIntoView({ behavior: 'smooth' });
     });
+
+    return () => {
+      socket.off('player-change-side');
+      socket.off('room-change-cli');
+      socket.off('press-start');
+      socket.off('game-end-cli');
+      socket.off('claim-draw-cli');
+      socket.off('new-chat-message');
+      socket.off('user-join-room');
+      socket.off('user-leave-room');
+    };
   }, [initStatus.init, onUserJoinRoom, onUserLeaveRoom, room?.time]);
 
   useEffect(() => {
@@ -509,6 +536,8 @@ const Room = ({ match, history }) => {
     );
   }
 
+  console.log(inviteList);
+
   if (gameData.pos) {
     if (
       room?.firstPlayer &&
@@ -584,6 +613,16 @@ const Room = ({ match, history }) => {
     }
   }
 
+  if (gameData.pos === null && room?.firstPlayer && room?.secondPlayer) {
+    if (!gameData.started) {
+      indicator = (
+        <div className="p-2 text-sm text-white bg-red-500 center-absolute">Waiting for start</div>
+      );
+    } else {
+      indicator = null;
+    }
+  }
+
   const handleClaimDraw = () => {
     if (gameData.userTurn._id === user._id) {
       socket.emit('claim-draw', { roomId: match.params.id });
@@ -635,6 +674,21 @@ const Room = ({ match, history }) => {
 
   const handleCancel = () => {
     setIsModalVisible(false);
+  };
+
+  const handleInviteClick = (userId) => {
+    if (inviteList[userId]) return;
+    setInviteList((prev) => ({ ...prev, [userId]: 'pending' }));
+
+    setTimeout(() => {
+      setInviteList((prev) => ({ ...prev, [userId]: null }));
+    }, 20000);
+
+    socket.emit('game-invite', {
+      roomId: Number(match.params.id),
+      userId,
+      inviteName: user.displayName
+    });
   };
 
   const { handleSubmit, register, errors, setError } = useForm();
@@ -716,21 +770,33 @@ const Room = ({ match, history }) => {
                       </li>
                     ))}
                   </TabPane>
-                  <TabPane tab="Invite" key="3">
-                    <div className="flex flex-col">
-                      {onlines &&
-                        onlines
-                          .filter((el) => el._id !== user._id)
-                          .map((invite) => (
-                            <li
-                              key={invite._id}
-                              className="flex items-center justify-between p-2 mb-2 list-none bg-gray-200 rounded-md hover:bg-gray-300">
-                              <span> {invite.email}</span>
-                              <span className="font-semibold text-yellow-600 ">{invite.point}</span>
-                            </li>
-                          ))}
-                    </div>
-                  </TabPane>
+                  {room?.owner?._id === user._id && (
+                    <TabPane tab="Invite" key="3">
+                      <div className="flex flex-col">
+                        <input
+                          className="w-full px-3 py-1 mb-2 bg-gray-100 border rounded-md"
+                          placeholder="Search for user..."
+                        />
+                        {searchFilter &&
+                          searchFilter
+                            .filter((el) => el._id !== user._id)
+                            .map((invite) => (
+                              <li
+                                key={invite._id}
+                                onClick={() => handleInviteClick(invite._id)}
+                                className={clsx(
+                                  'flex items-center justify-between p-2 mb-2 list-none bg-gray-200 rounded-md cursor-pointer hover:bg-gray-300',
+                                  inviteList[invite._id] && 'bg-yellow-300'
+                                )}>
+                                <span> {invite.email}</span>
+                                <span className="font-semibold text-yellow-600 ">
+                                  {invite.point}
+                                </span>
+                              </li>
+                            ))}
+                      </div>
+                    </TabPane>
+                  )}
                 </Tabs>
               </div>
             </div>

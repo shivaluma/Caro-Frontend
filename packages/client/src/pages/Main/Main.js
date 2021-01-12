@@ -9,7 +9,7 @@ import socket from 'configs/socket';
 import { RoomService, UserService } from 'services';
 import clsx from 'clsx';
 import { FaTrophy } from 'react-icons/fa';
-import { Spin, Modal, Avatar, Select } from 'antd';
+import { Spin, Modal, Avatar, Select, Button, notification } from 'antd';
 import { ImTrophy } from 'react-icons/im';
 import { AddButton, GameButton } from './components';
 
@@ -23,6 +23,7 @@ const Main = (props) => {
   const [modalData, setModalData] = useState({ show: false, player: null });
   const [newRoomData, setNewRoomData] = useState({ password: '', time: 30 });
   const [newRoomModalShow, setNewRoomModalShow] = useState(false);
+
   const history = useHistory();
   useEffect(() => {
     (async () => {
@@ -38,11 +39,15 @@ const Main = (props) => {
     });
 
     socket.on('clear-room', (roomId) => {
-      console.log('CLEAR EOOM');
-
       setRooms((prev) => prev.filter((el, index) => index !== roomId));
     });
-  }, []);
+
+    return () => {
+      socket.off('new-room');
+      socket.off('game-invite');
+      socket.off('clear-room');
+    };
+  }, [props.history]);
 
   useEffect(() => {
     if (!history) return;
@@ -210,9 +215,9 @@ const Main = (props) => {
       <Modal
         title={modalData?.player?.email}
         visible={modalData.show}
-        onOk={handleHideModal}
-        cancelText="View full profile"
-        onCancel={handleRedirectToProfile}>
+        onOk={handleRedirectToProfile}
+        okText="View full profile"
+        onCancel={handleHideModal}>
         <div className="flex flex-col items-center justify-center">
           <Avatar
             size={64}

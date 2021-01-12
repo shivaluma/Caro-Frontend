@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+#components-layout-demo-fixed-sider .logo {
+  height: 32px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 16px;
+}
+.site-layout .site-layout-background {
+  background: #fff;
+}
+
+.user-info {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.board-row:after {
+  clear: both;
+  content: '';
+  display: table;
+}
+
+.square {
+  background: transparent;
+  border: 1px solid #9b9b9b;
+  float: left;
+  font-size: 18px;
+  font-weight: bold;
+  line-height: 28px;
+  height: 28px;
+
+  margin-right: -1px;
+  margin-top: -1px;
+  padding: 0;
+  text-align: center;
+  width: 28px;
+}
+
+@media (max-width: 1700px) {
+  .square {
+  }
+}
+
+@media only screen and (max-width: 1366px) {
+  .square {
+    width: 25px;
+    height: 25px;
+    font-size: 18px;
+    line-height: 25px;
+  }
+}
+
+@media only screen and (max-width: 900px) {
+  .square {
+    width: 20px;
+    height: 20px;
+    font-size: 14px;
+    line-height: 20px;
+  }
+}
+
+.play-area {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
