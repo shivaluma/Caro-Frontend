@@ -22,22 +22,28 @@ const Profile = (props) => {
     []
   );
 
-  const [profile, setProfile] = useState(null);
-  const [gamesProfile, setGamesProfile] = useState(null);
+  const [user, setUser] = useState(null);
+  const [games, setGames] = useState(null);
 
   useEffect(() => {
     if (!props.match.params.id) return;
     (async () => {
-      const profileData = await UserService.getProfile(props.match.params.id);
-      setProfile(profileData);
+      try {
+        const profileData = await UserService.getProfile(props.match.params.id);
+        setUser(profileData);
+      } catch (error) {
+        console.log(error);
+      }
 
-      const gamesData = await UserService.getGameProfile(props.match.params.id);
-      setGamesProfile(gamesData);
+      try {
+        const gamesData = await UserService.getGameProfile(props.match.params.id);
+        setGames(gamesData);
+      } catch (error) {
+        console.log(error);
+      }
     })();
   }, [props.match.params.id]);
 
-  const user = profile;
-  const games = gamesProfile;
   return (
     <Layout>
       {user && (
@@ -76,26 +82,38 @@ const Profile = (props) => {
                 Recent games
               </span>
 
-              {games.map((game) => (
-                <div key={game._id} className="flex items-center p-6 mt-3 bg-gray-100 rounded-lg">
-                  <span
-                    className={clsx(
-                      'px-3 py-2 font-semibold text-white rounded-md',
-                      user._id === game.winner._id ? 'bg-green-600' : 'bg-red-600'
-                    )}>
-                    {user._id === game.winner._id ? 'WIN' : 'LOSE'}
-                  </span>
-                  <span className="flex items-center ml-12 font-semibold text-gray-500">
-                    VS{' '}
-                    <span className="ml-3 text-xl font-bold text-black">
-                      {user._id !== game.firstPlayer._id
-                        ? game.firstPlayer.email
-                        : game.secondPlayer.email}
+              {games &&
+                games.map((game) => (
+                  <button
+                    type="button"
+                    key={game._id}
+                    className="flex items-center p-6 mt-3 bg-gray-100 rounded-lg focus:outline-none">
+                    <span
+                      className={clsx(
+                        'px-3 py-2 font-semibold text-white rounded-md',
+                        // eslint-disable-next-line no-nested-ternary
+                        user._id === game.winner._id
+                          ? 'bg-green-600'
+                          : game.winner
+                          ? 'bg-red-600'
+                          : 'bg-yellow-600'
+                      )}>
+                      {
+                        // eslint-disable-next-line no-nested-ternary
+                        user._id === game.winner._id ? 'WIN' : game.winner ? 'LOSE' : 'DRAW'
+                      }
                     </span>
-                  </span>
-                  <span className="ml-auto text-lg text-gray-700">1 day ago.</span>
-                </div>
-              ))}
+                    <span className="flex items-center ml-12 font-semibold text-gray-500">
+                      VS{' '}
+                      <span className="ml-3 text-xl font-bold text-black">
+                        {user._id !== game.firstPlayer._id
+                          ? game.firstPlayer.email
+                          : game.secondPlayer.email}
+                      </span>
+                    </span>
+                    <span className="ml-auto text-lg text-gray-700"> 1 day ago.</span>
+                  </button>
+                ))}
             </div>
           </div>
         </>
