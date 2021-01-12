@@ -6,7 +6,6 @@ import { UserService } from 'services';
 import clsx from 'clsx';
 
 const Profile = (props) => {
-  console.log(props);
   const Layout = useMemo(
     () =>
       // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -24,18 +23,21 @@ const Profile = (props) => {
   );
 
   const [profile, setProfile] = useState(null);
+  const [gamesProfile, setGamesProfile] = useState(null);
 
   useEffect(() => {
     if (!props.match.params.id) return;
     (async () => {
-      const profile = await UserService.getFullProfiles(props.match.params.id);
-      console.log(profile);
-      setProfile(profile);
+      const profileData = await UserService.getProfile(props.match.params.id);
+      setProfile(profileData);
+
+      const gamesData = await UserService.getGameProfile(props.match.params.id);
+      setGamesProfile(gamesData);
     })();
   }, [props.match.params.id]);
 
-  const user = profile?.user?.value;
-  const games = profile?.games?.value;
+  const user = profile;
+  const games = gamesProfile;
   return (
     <Layout>
       {user && (
