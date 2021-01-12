@@ -171,7 +171,6 @@ const Room = ({ match, history, location }) => {
         lastTick,
         move
       }));
-      console.log('Room changed');
       setCountdown(() => 30);
     });
 
@@ -202,7 +201,6 @@ const Room = ({ match, history, location }) => {
         lastTick,
         move
       }));
-      setWinner(lastTick === 'O' ? 'Player 1' : 'Player 2');
       setCountdown(() => room?.time);
       setClockToggle(() => false);
       setUserAccepter(() => ({
@@ -418,7 +416,6 @@ const Room = ({ match, history, location }) => {
     if (clockToggle) {
       interval = setInterval(() => {
         setCountdown((prev) => {
-          console.log(prev);
           if (prev === 1) {
             clearInterval(interval);
           }
@@ -522,7 +519,8 @@ const Room = ({ match, history, location }) => {
     socket.emit('room-change', {
       board: new Array(20).fill(new Array(20).fill(null)),
       roomId: roomIdNum,
-      next: gameData.next
+      next: gameData.next,
+      move: 'reset'
     });
     setClockToggle(() => true);
     setCountdown(() => 10);
@@ -551,7 +549,7 @@ const Room = ({ match, history, location }) => {
             onClick={handlePressStartGame}
             type="button"
             className="flex flex-col justify-center p-2 text-sm text-white bg-red-500 center-absolute">
-            {`${winner ? `${winner} win \n` : ''} `}
+            {`${winner ? `${winner} \n` : ''} `}
             <span>Start game</span>
           </button>
         ) : (
@@ -559,7 +557,7 @@ const Room = ({ match, history, location }) => {
             onClick={handlePressStartGame}
             type="button"
             className="flex flex-col justify-center p-2 text-sm text-white bg-red-500 center-absolute">
-            {`${winner ? `${winner} win \n` : ''} `}
+            {`${winner ? `${winner} \n` : ''} `}
             <span>Start game</span>
           </button>
         );
@@ -653,12 +651,13 @@ const Room = ({ match, history, location }) => {
       roomId: roomIdNum,
       next: gameData.next,
       lastTick: null,
-      lose: null
+      lose: 'draw'
     });
     setUserAccepter(() => ({
       firstPlayer: false,
       secondPlayer: false
     }));
+    setIsModalVisible(false);
   };
 
   const onSubmitPassword = async ({ password }) => {
@@ -755,10 +754,23 @@ const Room = ({ match, history, location }) => {
                   <Chat messages={chat} endRef={messageRef} onMessageSend={handleSendMessage} />
                 </div>
               </div>
-              <div className="flex-1 w-full p-2 mt-6 bg-gray-100 rounded-lg">
+              <div className="flex-1 w-full h-full p-2 mt-6 bg-gray-100 rounded-lg">
                 <Tabs defaultActiveKey="1" onChange={console.log}>
                   <TabPane tab="Moves" key="1">
-                    asdasd
+                    <div className="relative flex-col flex-1 w-full">
+                      <div className="absolute top-0 bottom-0 left-0 right-0">
+                        {gameData.move.map((value, index) =>
+                          value ? (
+                            <span
+                              key={index}
+                              className="flex items-center justify-between p-2 mb-2 list-none bg-gray-200 rounded-md hover:bg-gray-300">
+                              <span> {index}</span>
+                              <span className="font-semibold text-yellow-600 ">{` ${value[0]} : ${value[1]}`}</span>
+                            </span>
+                          ) : null
+                        )}
+                      </div>
+                    </div>
                   </TabPane>
                   <TabPane tab="In Rooms" key="2">
                     {room.people.map((p) => (
@@ -801,13 +813,15 @@ const Room = ({ match, history, location }) => {
               </div>
             </div>
             <Modal
-              title="Basic Modal"
+              title="Opponent claim a draw!"
               visible={isModalVisible}
               onOk={handleOk}
-              onCancel={handleCancel}>
-              <p>Some contents...</p>
-              <p>Some contents...</p>
-              <p>Some contents...</p>
+              onCancel={handleCancel}
+              okText="Accept"
+              cancelText="Decline">
+              <p>Win: +25 point</p>
+              <p>Draw: -10 point</p>
+              <p>Lose: -25 point</p>
             </Modal>
           </div>
         )}

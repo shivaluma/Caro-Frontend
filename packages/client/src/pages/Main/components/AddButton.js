@@ -6,7 +6,7 @@ const AddButton = ({ handleClick }) => {
     <button
       onClick={handleClick}
       type="button"
-      className="p-2 text-lg text-white rounded-full new-button">
+      className="p-2 text-lg text-white rounded-full new-button focus:outline-none">
       <FiPlus />
     </button>
   );

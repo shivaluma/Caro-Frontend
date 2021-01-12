@@ -575,3 +575,12 @@ button::focus {
     rgba(252, 189, 1, 0.9) 125%
   );
 }
+
+.ant-tabs {
+  height: 100%;
+}
+
+.ant-tabs-content-holder {
+  display: flex;
+  overflow-y: auto;
+}
