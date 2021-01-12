@@ -4,11 +4,17 @@ import { Avatar } from 'antd';
 import { ImTrophy } from 'react-icons/im';
 import clsx from 'clsx';
 
-export default function UserPlay({ user, winner }) {
+export default function UserPlay({ user, winner, tick }) {
   return (
-    <div className="relative flex flex-col items-center justify-center w-full h-64 bg-gray-100 border-2 border-pink-500 rounded-md'">
+    <div className="relative flex flex-col items-center justify-center w-full h-64 bg-gray-100 rounded-md">
       {user ? (
         <>
+          <span
+            className={`w-5 h-5 text-lg ml-1absolute top-5 right-3 right-pane focus:outline-none font-bold ${
+              tick === 'X' ? 'text-red-600' : 'text-blue-600'
+            }`}>
+            {tick}
+          </span>
           <Avatar
             size={64}
             src="https://cdn.dribbble.com/users/4557429/avatars/small/open-uri20191213-19471-145569c?1576296398"

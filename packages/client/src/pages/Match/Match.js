@@ -21,7 +21,7 @@ const Match = ({ match }) => {
       useLayout({
         left: () => (
           <div key="leftHeader" className="ml-2 text-xl font-medium text-gray-800">
-            {match.params.id !== null && `Match #${match.params.id}`}
+            {match.params.id !== null && 'Match detail'}
           </div>
         )
       }),
@@ -46,8 +46,9 @@ const Match = ({ match }) => {
         {gameData && (
           <div className="flex justify-center max-h-full mt-10">
             <div className="flex flex-col w-80">
-              <UserPlay user={gameData.firstPlayer} winner={gameData.winner} />
-              <UserPlay user={gameData.secondPlayer} winner={gameData.winner} />
+              <UserPlay user={gameData.firstPlayer} winner={gameData.winner} tick="X" />
+              <div className="flex-1 my-6 " />
+              <UserPlay user={gameData.secondPlayer} winner={gameData.winner} tick="O" />
             </div>
 
             <div className="flex items-center justify-center flex-shrink-0 px-3 mx-2 rounded-lg bg-board">
