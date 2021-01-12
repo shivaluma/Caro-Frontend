@@ -1,7 +1,12 @@
 import API from '@caro/common/api';
 
-export const getFullProfiles = async (id) => {
-  const { data } = await API.get(`user/profile-full?id=${id}`);
+export const getProfile = async (id) => {
+  const { data } = await API.get(`user/profile?id=${id}`);
+  return data.data;
+};
+
+export const getGameProfile = async (id) => {
+  const { data } = await API.get(`user/profile-game?id=${id}`);
   return data.data;
 };
 

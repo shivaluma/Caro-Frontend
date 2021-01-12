@@ -14,7 +14,7 @@ import { initUserLoading } from 'slices/user';
 import ProtectedRoute from 'components/ProtectedRoute';
 import { Main, Room } from 'pages';
 import { addItem, removeItem } from 'slices/online';
-import { Profile, ForgotPassword } from 'pages';
+import { Profile, ForgotPassword, Match } from 'pages';
 import Wrapper from 'hoc/Wrapper';
 
 function App() {
@@ -51,6 +51,7 @@ function App() {
             <Route exact path="/forgot-password" component={ForgotPassword} />
             <Route exact path="/active-account" component={ActiveAccount} />
             <Route path="/profile/:id" component={Profile} />
+            <Route path="/match/:id" component={Match} />
 
             <ProtectedRoute path="/:id" component={Room} />
           </Switch>

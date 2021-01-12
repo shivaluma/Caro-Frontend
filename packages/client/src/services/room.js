@@ -15,4 +15,9 @@ const getRoomById = async (id, type) => {
   return data;
 };
 
-export { getAllRooms, getRoomById, postCheckPassword };
+const getMatchById = async (id) => {
+  const { data } = await API.get(`rooms/match/${id}`);
+  return data;
+};
+
+export { getAllRooms, getRoomById, postCheckPassword, getMatchById };
