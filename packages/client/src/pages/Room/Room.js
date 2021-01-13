@@ -61,6 +61,7 @@ const Room = ({ match, history, location }) => {
   const [clockToggle, setClockToggle] = useState(false);
   const [inviteList, setInviteList] = useState({});
   const nameFilterDebounce = useDebounce(nameFilter, 300);
+  const [timeMileStone, setTimeMileStone] = useState(null);
   const onUserJoinRoom = useCallback((user) => {
     setRoom((prev) => ({
       ...prev,
@@ -78,6 +79,8 @@ const Room = ({ match, history, location }) => {
   useEffect(() => {
     setSearchFilter(() => onlines.filter((el) => el.displayName.includes(nameFilterDebounce)));
   }, [nameFilterDebounce, onlines]);
+
+  console.log(gameData);
 
   useEffect(() => {
     if (initStatus.join) return;
@@ -125,12 +128,13 @@ const Room = ({ match, history, location }) => {
             type="button"
             key="right"
             onClick={handleLeaveRoomClick}
-            className="px-3 py-2 mr-2 font-semibold border-2 rounded-full text-main border-main">
+            disabled={gameData.started}
+            className="px-3 py-2 mr-2 font-semibold border-2 rounded-full text-main border-main disabled:border-gray-500 disabled:cursor-not-allowed disabled:text-gray-500">
             Leave Room
           </button>
         )
       }),
-    [match.params.id, handleLeaveRoomClick]
+    [match.params.id, handleLeaveRoomClick, gameData.started]
   );
 
   const onUserLeaveRoom = useCallback((user) => {
@@ -162,7 +166,7 @@ const Room = ({ match, history, location }) => {
         userTurn
       }));
     });
-    socket.on('room-change-cli', ({ board, next, user, lastTick, move }) => {
+    socket.on('room-change-cli', ({ board, next, user, lastTick, move, newTurnMilestone }) => {
       setGameData((prev) => ({
         ...prev,
         board,
@@ -171,7 +175,8 @@ const Room = ({ match, history, location }) => {
         lastTick,
         move
       }));
-      setCountdown(() => 30);
+      setCountdown(() => room?.time);
+      setTimeMileStone(() => new Date(newTurnMilestone) || new Date());
     });
 
     socket.on('press-start', ({ pos }) => {
@@ -181,7 +186,7 @@ const Room = ({ match, history, location }) => {
         setUserAccepter((prev) => ({ ...prev, secondPlayer: true }));
       }
 
-      setCountdown(() => 10);
+      setWinner(null);
 
       setClockToggle(() => true);
     });
@@ -197,13 +202,14 @@ const Room = ({ match, history, location }) => {
       setGameData((prev) => ({
         ...prev,
         board: new Array(20).fill(new Array(20).fill(null)),
-        next,
+        next: !next,
         started: false,
         userTurn: null,
         lastTick,
         move: []
       }));
       setCountdown(() => room?.time);
+      setTimeMileStone(() => new Date());
       setClockToggle(() => false);
       setUserAccepter(() => ({
         firstPlayer: false,
@@ -241,7 +247,60 @@ const Room = ({ match, history, location }) => {
       socket.off('new-chat-message');
       socket.off('user-join-room');
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initStatus.init, onUserJoinRoom, room?.time]);
+
+  useEffect(() => {
+    if (!winner) return;
+    if (winner === 'Player 1 win') {
+      const firstPlayer = room?.firstPlayer ? { ...room?.firstPlayer } : null;
+      const secondPlayer = room?.secondPlayer ? { ...room?.secondPlayer } : null;
+
+      if (firstPlayer) {
+        firstPlayer.wincount += 1;
+        firstPlayer.point += 25;
+      }
+
+      if (secondPlayer) {
+        secondPlayer.losecount += 1;
+        secondPlayer.point -= 25;
+      }
+      setRoom((prev) => ({ ...prev, firstPlayer, secondPlayer }));
+    }
+
+    if (winner === 'Player 2 win') {
+      const firstPlayer = room?.firstPlayer ? { ...room?.firstPlayer } : null;
+      const secondPlayer = room?.secondPlayer ? { ...room?.secondPlayer } : null;
+
+      if (firstPlayer) {
+        firstPlayer.losecount += 1;
+        firstPlayer.point -= 25;
+      }
+
+      if (secondPlayer) {
+        secondPlayer.wincount += 1;
+        secondPlayer.point -= 25;
+      }
+      setRoom((prev) => ({ ...prev, firstPlayer, secondPlayer }));
+    }
+
+    if (winner === 'Draw') {
+      const firstPlayer = room?.firstPlayer ? { ...room?.firstPlayer } : null;
+      const secondPlayer = room?.secondPlayer ? { ...room?.secondPlayer } : null;
+
+      if (firstPlayer) {
+        firstPlayer.drawcount += 1;
+        firstPlayer.point -= 10;
+      }
+
+      if (secondPlayer) {
+        secondPlayer.drawcount += 1;
+        secondPlayer.point -= 10;
+      }
+      setRoom((prev) => ({ ...prev, firstPlayer, secondPlayer }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [winner]);
 
   useEffect(() => {
     socket.on('user-leave-room', (leaveUser) => {
@@ -337,10 +396,18 @@ const Room = ({ match, history, location }) => {
         ...prev,
         board: room?.data?.board || new Array(20).fill(new Array(20).fill(null)),
         next,
-        userTurn: !next ? room?.data?.firstPlayer : room?.data?.secondPlayer,
+        userTurn: next ? room?.data?.firstPlayer : room?.data?.secondPlayer,
         lastTick: room?.data?.lastTick || null,
         started: room?.data?.started || false
       }));
+
+      setTimeMileStone(() =>
+        room?.data?.newTurnMilestone ? new Date(room?.data?.newTurnMilestone) : new Date()
+      );
+
+      if (room?.data?.started) {
+        setClockToggle(() => true);
+      }
 
       setUserAccepter(() => ({
         firstPlayer: room?.data?.ready?.firstPlayer || false,
@@ -415,15 +482,16 @@ const Room = ({ match, history, location }) => {
   ]);
 
   useEffect(() => {
-    if (userAccepter.firstPlayer && userAccepter.secondPlayer) {
+    if (userAccepter.firstPlayer && userAccepter.secondPlayer && !gameData.started) {
       setCountdown(() => room?.time);
-      console.log('SET BY ROOM TIME');
+      setTimeMileStone(() => new Date());
+
       setGameData((prev) => ({
         ...prev,
         started: true
       }));
     }
-  }, [userAccepter, room?.time]);
+  }, [userAccepter, room?.time, gameData.started]);
 
   useEffect(() => {
     console.log(gameData.started);
@@ -438,6 +506,31 @@ const Room = ({ match, history, location }) => {
             lastTick: [3, 3],
             lose: gameData.next ? room?.firstPlayer : room?.secondPlayer
           });
+
+          setClockToggle(() => false);
+          if (!room?.firstPlayer?._id || !room?.secondPlayer?._id) return;
+
+          if (room?.firstPlayer._id === user._id) {
+            setRoom((prev) => ({ ...prev, firstPlayer: null }));
+            setGameData((prev) => ({
+              ...prev,
+              pos: null
+            }));
+            socket.emit('change-side', { roomId: match.params.id, user, side: null });
+          } else if (room?.secondPlayer._id === user._id) {
+            setRoom((prev) => ({ ...prev, secondPlayer: null }));
+            setGameData((prev) => ({
+              ...prev,
+              pos: null
+            }));
+            socket.emit('change-side', { roomId: match.params.id, user, side: null });
+          }
+          setCountdown(() => room?.time);
+          setTimeMileStone(() => new Date());
+          setUserAccepter(() => ({
+            firstPlayer: false,
+            secondPlayer: false
+          }));
           // setUserAccepter(() => ({
           //   firstPlayer: false,
           //   secondPlayer: false
@@ -459,6 +552,7 @@ const Room = ({ match, history, location }) => {
     gameData.next,
     match.params.id,
     room?.time,
+    user,
     room?.firstPlayer,
     room?.secondPlayer
   ]);
@@ -469,16 +563,21 @@ const Room = ({ match, history, location }) => {
     if (clockToggle) {
       interval = setInterval(() => {
         setCountdown((prev) => {
-          if (prev === 1) {
+          const t1 = new Date();
+          const t2 = timeMileStone;
+          const dif = t1.getTime() - t2.getTime();
+
+          const seconds = room?.time - Math.round(dif / 1000);
+          if (seconds === 0) {
             clearInterval(interval);
           }
-          return prev - 1;
+          return seconds;
         });
       }, 1000);
     }
 
     return () => clearInterval(interval);
-  }, [clockToggle]);
+  }, [clockToggle, timeMileStone, room?.time]);
 
   const handleSendMessage = useCallback(
     (content) => {
@@ -491,6 +590,7 @@ const Room = ({ match, history, location }) => {
     (newPos) => {
       if (!match.params.id) return;
       setCountdown(() => room?.time);
+      setTimeMileStone(() => new Date());
       if (newPos === 1) {
         setRoom((prev) => ({ ...prev, firstPlayer: user }));
         setGameData((prev) => ({
@@ -572,7 +672,7 @@ const Room = ({ match, history, location }) => {
       move: 'reset'
     });
     setClockToggle(() => true);
-    setCountdown(() => 10);
+
     socket.emit('press-start', { roomId: match.params.id, pos: gameData.pos });
   };
 
@@ -642,7 +742,8 @@ const Room = ({ match, history, location }) => {
     if (gameData.pos === 1) {
       if (room?.secondPlayer === null) {
         indicator = (
-          <div className="p-2 text-sm text-white bg-red-500 center-absolute">
+          <div className="flex flex-col p-2 text-sm text-white bg-red-500 center-absolute">
+            {winner && <span>{winner}</span>}
             Waiting for player
           </div>
         );
@@ -652,7 +753,8 @@ const Room = ({ match, history, location }) => {
     if (gameData.pos === 2) {
       if (room?.firstPlayer === null) {
         indicator = (
-          <div className="p-2 text-sm text-white bg-red-500 center-absolute">
+          <div className="flex flex-col p-2 text-sm text-white bg-red-500 center-absolute">
+            {winner && <span>{winner}</span>}
             Waiting for player
           </div>
         );
