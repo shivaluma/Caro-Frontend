@@ -4,6 +4,7 @@ import { useLayout } from 'hooks';
 import { useMemo, useEffect, useState } from 'react';
 import { UserService } from 'services';
 import { useHistory } from 'react-router-dom';
+import dayjs from 'utils/dayjs';
 import clsx from 'clsx';
 
 const Profile = (props) => {
@@ -95,7 +96,7 @@ const Profile = (props) => {
                       className={clsx(
                         'px-3 py-2 font-semibold text-white rounded-md',
                         // eslint-disable-next-line no-nested-ternary
-                        user._id === game.winner._id
+                        user._id === game.winner?._id
                           ? 'bg-green-600'
                           : game.winner
                           ? 'bg-red-600'
@@ -103,7 +104,7 @@ const Profile = (props) => {
                       )}>
                       {
                         // eslint-disable-next-line no-nested-ternary
-                        user._id === game.winner._id ? 'WIN' : game.winner ? 'LOSE' : 'DRAW'
+                        user._id === game.winner?._id ? 'WIN' : game.winner ? 'LOSE' : 'DRAW'
                       }
                     </span>
                     <span className="flex items-center ml-12 font-semibold text-gray-500">
@@ -114,7 +115,9 @@ const Profile = (props) => {
                           : game.secondPlayer.email}
                       </span>
                     </span>
-                    <span className="ml-auto text-lg text-gray-700"> 1 day ago.</span>
+                    <span className="ml-auto text-lg text-gray-700">
+                      {dayjs(game.createAt).fromNow()}
+                    </span>
                   </button>
                 ))}
             </div>
