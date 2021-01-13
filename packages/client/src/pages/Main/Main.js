@@ -114,10 +114,14 @@ const Main = (props) => {
   const handleQuickMatch = useCallback(() => {
     setFindMode(true);
     socket.emit('quick-match', { user, option: { password: '', time: 30 } });
-    socket.on('quick-match-cli', ({ roomId }) => {
-      if (roomId != null) {
-        history.push(`/${roomId}`);
-      }
+    socket.on('quick-match-cli', ({ roomId, users }) => {
+      users.forEach((element) => {
+        if (element._id === user._id) {
+          if (roomId != null) {
+            history.push(`/${roomId}`);
+          }
+        }
+      });
     });
   }, [user, history]);
 
