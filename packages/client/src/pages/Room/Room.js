@@ -187,19 +187,21 @@ const Room = ({ match, history, location }) => {
     });
 
     socket.on('game-end-cli', ({ board, next, lastTick, move }) => {
+      console.log('GAME END');
       if (next === null) {
         setWinner('Draw');
       } else {
         setWinner(next === true ? 'Player 1 win' : 'Player 2 win');
       }
+
       setGameData((prev) => ({
         ...prev,
-        board,
+        board: new Array(20).fill(new Array(20).fill(null)),
         next,
         started: false,
         userTurn: null,
         lastTick,
-        move
+        move: []
       }));
       setCountdown(() => room?.time);
       setClockToggle(() => false);
@@ -230,17 +232,6 @@ const Room = ({ match, history, location }) => {
       messageRef.current.scrollIntoView({ behavior: 'smooth' });
     });
 
-    socket.on('user-leave-room', (user) => {
-      console.log(user);
-      setChat((prev) => [
-        ...prev,
-        { sender: 'Admin', content: `A user has leaved the room : ${user.email}` }
-      ]);
-      onUserLeaveRoom(user);
-      if (!messageRef.current) return;
-      messageRef.current.scrollIntoView({ behavior: 'smooth' });
-    });
-
     return () => {
       socket.off('player-change-side');
       socket.off('room-change-cli');
@@ -249,9 +240,68 @@ const Room = ({ match, history, location }) => {
       socket.off('claim-draw-cli');
       socket.off('new-chat-message');
       socket.off('user-join-room');
+    };
+  }, [initStatus.init, onUserJoinRoom, room?.time]);
+
+  useEffect(() => {
+    socket.on('user-leave-room', (leaveUser) => {
+      setChat((prev) => [
+        ...prev,
+        { sender: 'Admin', content: `A user has leaved the room : ${leaveUser.displayName}` }
+      ]);
+      onUserLeaveRoom(leaveUser);
+
+      console.log(leaveUser);
+      if (room?.firstPlayer?._id === leaveUser._id || room?.secondPlayer?._id === leaveUser._id) {
+        setGameData((prev) => ({
+          ...prev,
+          board: new Array(20).fill(new Array(20).fill(null)),
+
+          started: false,
+          userTurn: null,
+          lastTick: null,
+          move: []
+        }));
+        setCountdown(() => room?.time);
+        setClockToggle(() => false);
+        setUserAccepter(() => ({
+          firstPlayer: false,
+          secondPlayer: false
+        }));
+      }
+
+      // if (gameData.pos && gameData.started) {
+      //   console.log('GAME LEAVE gamedata pos');
+      //   const roomIdNum = Number(match.params.id);
+      //   if (room?.firstPlayer?._id === leaveUser._id) {
+      //     console.log('player 1 leave');
+      //     socket.emit('game-end', {
+      //       board: gameData.board,
+      //       roomId: roomIdNum,
+      //       next: gameData.next,
+      //       lastTick: [3, 3],
+      //       lose: room?.firstPlayer
+      //     });
+      //   }
+      //   if (room?.secondPlayer?._id === leaveUser._id) {
+      //     console.log('player 2 leave');
+      //     socket.emit('game-end', {
+      //       board: gameData.board,
+      //       roomId: roomIdNum,
+      //       next: gameData.next,
+      //       lastTick: [3, 3],
+      //       lose: room?.secondPlayer
+      //     });
+      //   }
+      // }
+
+      if (!messageRef.current) return;
+      messageRef.current.scrollIntoView({ behavior: 'smooth' });
+    });
+    return () => {
       socket.off('user-leave-room');
     };
-  }, [initStatus.init, onUserJoinRoom, onUserLeaveRoom, room?.time]);
+  }, [room?.firstPlayer, room?.secondPlayer, match?.params?.id, room?.time, onUserLeaveRoom]);
 
   useEffect(() => {
     const roomIdNum = Number(match.params.id);
@@ -379,30 +429,33 @@ const Room = ({ match, history, location }) => {
     console.log(gameData.started);
     if (gameData.started) {
       if (countdown === 0) {
-        const roomIdNum = Number(match.params.id);
-        socket.emit('game-end', {
-          board: gameData.board,
-          roomId: roomIdNum,
-          next: gameData.next,
-          lastTick: [3, 3],
-          lose: gameData.next ? room?.firstPlayer : room?.secondPlayer
-        });
-        setUserAccepter(() => ({
-          firstPlayer: false,
-          secondPlayer: false
-        }));
-        setGameData((prev) => ({
-          ...prev,
-          started: false
-        }));
-        setClockToggle(() => false);
-        setCountdown(() => room?.time);
+        if (gameData.pos === 1) {
+          const roomIdNum = Number(match.params.id);
+          socket.emit('game-end', {
+            board: gameData.board,
+            roomId: roomIdNum,
+            next: gameData.next,
+            lastTick: [3, 3],
+            lose: gameData.next ? room?.firstPlayer : room?.secondPlayer
+          });
+          // setUserAccepter(() => ({
+          //   firstPlayer: false,
+          //   secondPlayer: false
+          // }));
+          // setGameData((prev) => ({
+          //   ...prev,
+          //   started: false
+          // }));
+          // setClockToggle(() => false);
+          // setCountdown(() => room?.time);
+        }
       }
     }
   }, [
     gameData.started,
     countdown,
     gameData.board,
+    gameData.pos,
     gameData.next,
     match.params.id,
     room?.time,
@@ -499,10 +552,6 @@ const Room = ({ match, history, location }) => {
             next: gameData.next,
             lastTick: [i, j]
           });
-          setGameData((prev) => ({
-            ...prev,
-            started: false
-          }));
         } else {
           socket.emit('room-change', {
             board: newBoard,
@@ -653,10 +702,7 @@ const Room = ({ match, history, location }) => {
       lastTick: null,
       lose: 'draw'
     });
-    setUserAccepter(() => ({
-      firstPlayer: false,
-      secondPlayer: false
-    }));
+
     setIsModalVisible(false);
   };
 
