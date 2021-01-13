@@ -2,11 +2,14 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { signout } from 'slices/user';
 import { toggleProfileSetting } from 'slices/profile';
+import { useHistory } from 'react-router-dom';
 
 const UserMenu = () => {
+  const user = useSelector((state) => state.user);
+  const history = useHistory();
   const dispatch = useDispatch();
   const handleOpenUserProfileModal = () => {
-    dispatch(toggleProfileSetting());
+    history.push(`/profile/${user._id}`);
   };
   const displayName = useSelector((state) => state.user.email);
 
@@ -20,7 +23,7 @@ const UserMenu = () => {
         type="button"
         className="px-5 py-3 text-left text-gray-400 border-b border-gray-200 outline-none focus:outline-none hover:bg-gray-200"
         onClick={handleOpenUserProfileModal}>
-        Edit Profile
+        Profile
       </button>
       <button
         type="button"

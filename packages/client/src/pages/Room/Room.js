@@ -80,7 +80,9 @@ const Room = ({ match, history, location }) => {
     setSearchFilter(() => onlines.filter((el) => el.displayName.includes(nameFilterDebounce)));
   }, [nameFilterDebounce, onlines]);
 
-  console.log(gameData);
+  const handleChangeNameFilter = (e) => {
+    setNameFilter(e.target.value);
+  };
 
   useEffect(() => {
     if (initStatus.join) return;
@@ -218,7 +220,7 @@ const Room = ({ match, history, location }) => {
     });
 
     socket.on('claim-draw-cli', () => {
-      setIsModalVisible(true);
+      if (user._id === room.firstPlayer || user._id === room.secondPlayer) setIsModalVisible(true);
     });
 
     socket.on('new-chat-message', (message) => {
@@ -935,6 +937,7 @@ const Room = ({ match, history, location }) => {
                       <div className="flex flex-col">
                         <input
                           className="w-full px-3 py-1 mb-2 bg-gray-100 border rounded-md"
+                          onChange={handleChangeNameFilter}
                           placeholder="Search for user..."
                         />
                         {searchFilter &&
