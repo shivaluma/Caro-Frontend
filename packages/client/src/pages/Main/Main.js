@@ -154,7 +154,7 @@ const Main = (props) => {
 
             <input
               onChange={handleChangeSearchRoomQuery}
-              className="w-12 px-3 py-1 border border-gray-300 rounded-full focus:outline-none"
+              className="w-32 px-3 py-1 border border-gray-300 rounded-full focus:outline-none"
               placeholder="Search for room..."
             />
 
