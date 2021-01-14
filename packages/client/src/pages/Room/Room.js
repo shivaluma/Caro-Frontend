@@ -13,15 +13,13 @@ import { useSelector, useDispatch } from 'react-redux';
 import socket from 'configs/socket';
 import { Modal, Tabs } from 'antd';
 import calculateWin from 'utils/calculateWin';
-import { Select, Input } from 'antd';
+
 import { useForm } from 'react-hook-form';
 import { changeRoom } from 'slices/user';
 import { postCheckPassword } from 'services/room';
 import { useDebounce } from 'hooks';
 import clsx from 'clsx';
 import { Chat, UserPlay, Board } from './components';
-
-const { Option } = Select;
 
 const { TabPane } = Tabs;
 const Room = ({ match, history, location }) => {
@@ -55,7 +53,7 @@ const Room = ({ match, history, location }) => {
   const onlines = useSelector((state) => state.online);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [currentTab, setCurrentTab] = useState('1');
+
   const [nameFilter, setNameFilter] = useState('');
   const [searchFilter, setSearchFilter] = useState([]);
   const [clockToggle, setClockToggle] = useState(false);
@@ -193,7 +191,7 @@ const Room = ({ match, history, location }) => {
       setClockToggle(() => true);
     });
 
-    socket.on('game-end-cli', ({ board, next, lastTick, move }) => {
+    socket.on('game-end-cli', ({ next, lastTick }) => {
       console.log('Game end');
       if (next === null) {
         setWinner('Draw');
@@ -582,7 +580,7 @@ const Room = ({ match, history, location }) => {
     let interval;
     if (clockToggle) {
       interval = setInterval(() => {
-        setCountdown((prev) => {
+        setCountdown(() => {
           const t1 = new Date();
           const t2 = timeMileStone;
           const dif = t1.getTime() - t2.getTime();
@@ -833,7 +831,7 @@ const Room = ({ match, history, location }) => {
 
   const onSubmitPassword = async ({ password }) => {
     try {
-      const data = await postCheckPassword(Number(match.params.id), password);
+      await postCheckPassword(Number(match.params.id), password);
       setInitStatus((prev) => ({ ...prev, join: true, requirepass: false }));
 
       onUserJoinRoom(user);

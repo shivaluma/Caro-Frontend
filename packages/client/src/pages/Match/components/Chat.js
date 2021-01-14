@@ -1,5 +1,3 @@
-import { useState } from 'react';
-
 export default function Chat({ messages }) {
   return (
     <div className="flex flex-col h-full max-h-full overflow-hidden rounded-t-lg">

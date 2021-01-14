@@ -7,7 +7,7 @@ import { FiUser } from 'react-icons/fi';
 // import { IoPlayForward } from 'react-icons/io5';
 import clsx from 'clsx';
 
-const GameButton = ({ onClick, room, hasPassword = true, hasStarted = true }) => {
+const GameButton = ({ onClick, room, hasStarted = true }) => {
   // const [time, setTime] = useState(dayjs(room.createdAt).fromNow());
 
   // useEffect(() => {

@@ -9,10 +9,10 @@ import socket from 'configs/socket';
 import { RoomService, UserService } from 'services';
 import clsx from 'clsx';
 import { FaTrophy } from 'react-icons/fa';
-import { Spin, Modal, Avatar, Select, Button, notification } from 'antd';
+import { Spin, Modal, Avatar, Select, Button } from 'antd';
 import { ImTrophy } from 'react-icons/im';
 import { ImCancelCircle } from 'react-icons/im';
-import { AddButton, GameButton, QuickMatchButton } from './components';
+import { AddButton, GameButton } from './components';
 
 const { Option } = Select;
 const Main = (props) => {
