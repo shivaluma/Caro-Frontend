@@ -219,8 +219,11 @@ const Room = ({ match, history, location }) => {
       setClockToggle(() => false);
     });
 
-    socket.on('claim-draw-cli', () => {
-      if (gameData.pos) setIsModalVisible(true);
+    socket.on('claim-draw-cli', ({ userDraw }) => {
+      console.log(userDraw);
+      if (user._id === userDraw?._id) {
+        setIsModalVisible(true);
+      }
     });
 
     socket.on('new-chat-message', (message) => {
@@ -795,7 +798,7 @@ const Room = ({ match, history, location }) => {
 
   const handleClaimDraw = () => {
     if (gameData.userTurn._id === user._id) {
-      socket.emit('claim-draw', { roomId: match.params.id });
+      socket.emit('claim-draw', { roomId: match.params.id, user });
     }
   };
 
