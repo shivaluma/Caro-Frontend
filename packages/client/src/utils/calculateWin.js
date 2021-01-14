@@ -1,3 +1,4 @@
+/* eslint-disable no-constant-condition */
 const size = 20;
 
 const calculateWin = async (i, j, value, board) => {

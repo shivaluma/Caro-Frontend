@@ -2,7 +2,7 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable react/display-name */
 import { useMemo, useCallback, useEffect, useState } from 'react';
-import { useLayout } from 'hooks';
+import { useDebounce, useLayout } from 'hooks';
 import { useHistory } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import socket from 'configs/socket';
@@ -25,7 +25,8 @@ const Main = (props) => {
   const [newRoomData, setNewRoomData] = useState({ password: '', time: 30 });
   const [newRoomModalShow, setNewRoomModalShow] = useState(false);
   const [findMode, setFindMode] = useState(false);
-
+  const [searchRoomQuery, setSearchRoomQuery] = useState('');
+  const searchRoomQueryDebounce = useDebounce(searchRoomQuery, 400);
   const history = useHistory();
   useEffect(() => {
     (async () => {
@@ -50,6 +51,14 @@ const Main = (props) => {
       socket.off('clear-room');
     };
   }, [props.history]);
+
+  useEffect(() => {
+    console.log(searchRoomQueryDebounce);
+  }, [searchRoomQueryDebounce]);
+
+  const handleChangeSearchRoomQuery = useCallback((e) => {
+    setSearchRoomQuery(e.target.value);
+  }, []);
 
   useEffect(() => {
     if (!history) return;
@@ -132,24 +141,31 @@ const Main = (props) => {
           </div>
         ),
         right: () => (
-          <>
+          <div className="flex items-center">
             <Button
               onClick={findMode ? handleCancelFindMatch : handleQuickMatch}
               type="button"
               disabled={Number.isInteger(user?.room)}
-              className="flex flex-row items-center p-2 px-3 py-4 mr-2 font-semibold border-2 rounded-full text-main border-main focus:outline-none">
+              className="flex flex-row items-center p-2 px-3 py-2 mr-2 font-semibold border-2 rounded-full text-main border-main focus:outline-none">
               {findMode ? 'Finding Match' : 'Quick Match'}
               {findMode && <Spin size="small" className="ml-1 mr-2 -mb-1" />}
               {findMode && <ImCancelCircle />}
             </Button>
 
+            <input
+              onChange={handleChangeSearchRoomQuery}
+              className="w-12 px-3 py-1 border border-gray-300 rounded-full focus:outline-none"
+              placeholder="Search for room..."
+            />
+
             <AddButton handleClick={handleOpenCreateRoomModal} />
-          </>
+          </div>
         )
       }),
     [
       rooms.length,
       handleOpenCreateRoomModal,
+      handleChangeSearchRoomQuery,
       handleQuickMatch,
       handleCancelFindMatch,
       findMode,
@@ -163,9 +179,11 @@ const Main = (props) => {
         <div className="container flex flex-col mx-auto">
           <div className="flex flex-wrap w-full mt-8 overflow-y-scroll room-container">
             {rooms?.length > 0 &&
-              rooms.map((room) => (
-                <GameButton key={room.roomId} onClick={handleRoomClick} room={room} />
-              ))}
+              rooms
+                .filter((el) => el.roomId.toString().includes(searchRoomQueryDebounce))
+                .map((room) => (
+                  <GameButton key={room.roomId} onClick={handleRoomClick} room={room} />
+                ))}
           </div>
         </div>
 
