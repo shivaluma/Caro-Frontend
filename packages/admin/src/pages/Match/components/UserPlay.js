@@ -1,6 +1,6 @@
 /* eslint-disable no-nested-ternary */
 import React from 'react';
-import { TrophyOutlined, FacebookOutlined, GoogleOutlined } from '@ant-design/icons';
+import { TrophyOutlined } from '@ant-design/icons';
 import { Avatar } from 'antd';
 
 export default function UserPlay({ user }) {

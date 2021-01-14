@@ -6,7 +6,7 @@ module.exports = {
   webpack: {
     alias: {},
     plugins: [],
-    configure: (webpackConfig, { env, paths }) => {
+    configure: (webpackConfig) => {
       const { isFound, match } = getLoader(webpackConfig, loaderByName('babel-loader'));
       if (isFound) {
         const include = Array.isArray(match.loader.include)

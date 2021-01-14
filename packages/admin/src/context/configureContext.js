@@ -1,4 +1,3 @@
-import Auth from 'layouts/Auth/Auth';
 import { createContext, useReducer, useMemo, useContext } from 'react';
 
 const AuthContext = createContext(null);

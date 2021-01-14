@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Tag, Avatar, Spin } from 'antd';
-import { TrophyOutlined, FacebookOutlined, GoogleOutlined } from '@ant-design/icons';
+import { TrophyOutlined } from '@ant-design/icons';
 import API from 'api';
-import { Board, UserPlay } from './components';
+import { Board } from './components';
 
 const Match = ({ match }) => {
   const [loading, setLoading] = useState(true);
