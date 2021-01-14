@@ -35,7 +35,7 @@ const Match = ({ match }) => {
                   size={64}
                   src="https://i.pinimg.com/474x/58/36/63/583663b5e293ac71fab5ad283b627320.jpg"
                 />
-                {matchc.firstPlayer._id === matchc.winner._id ? (
+                {matchc?.firstPlayer?._id === matchc?.winner?._id ? (
                   <Tag className="mt-2" color="#87d068">
                     Win
                   </Tag>
@@ -62,7 +62,7 @@ const Match = ({ match }) => {
                   size={64}
                   src="https://i.pinimg.com/474x/58/36/63/583663b5e293ac71fab5ad283b627320.jpg"
                 />
-                {matchc.secondPlayer._id === matchc.winner._id ? (
+                {matchc?.secondPlayer?._id === matchc?.winner?._id ? (
                   <Tag className="mt-2" color="#87d068">
                     Win
                   </Tag>

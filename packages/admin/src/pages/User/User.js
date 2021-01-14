@@ -49,7 +49,7 @@ const User = ({ match, history }) => {
       render: (text, record) => (
         <span>
           {record.firstPlayer.displayName}{' '}
-          {record.firstPlayer.displayName === record.winner.displayName && (
+          {record?.firstPlayer?.displayName === record?.winner?.displayName && (
             <Tag color="green">Winner</Tag>
           )}
         </span>
@@ -62,7 +62,7 @@ const User = ({ match, history }) => {
       render: (text, record) => (
         <span>
           {record.secondPlayer.displayName}{' '}
-          {record.secondPlayer.displayName === record.winner.displayName && (
+          {record?.secondPlayer?.displayName === record?.winner?.displayName && (
             <Tag color="green">Winner</Tag>
           )}
         </span>
