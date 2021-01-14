@@ -50,8 +50,8 @@ function App() {
             <Route exact path="/login" component={Auth} />
             <Route exact path="/forgot-password" component={ForgotPassword} />
             <Route exact path="/active-account" component={ActiveAccount} />
-            <Route path="/profile/:id" component={Profile} />
-            <Route path="/match/:id" component={Match} />
+            <ProtectedRoute path="/profile/:id" component={Profile} />
+            <ProtectedRoute path="/match/:id" component={Match} />
 
             <ProtectedRoute path="/:id" component={Room} />
           </Switch>
