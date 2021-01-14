@@ -25,7 +25,6 @@ const Main = (props) => {
   const [newRoomData, setNewRoomData] = useState({ password: '', time: 30 });
   const [newRoomModalShow, setNewRoomModalShow] = useState(false);
   const [findMode, setFindMode] = useState(false);
-  const [countup, setCountup] = useState(1);
 
   const history = useHistory();
   useEffect(() => {
@@ -59,53 +58,43 @@ const Main = (props) => {
     });
   }, [history]);
 
-  useEffect(() => {
-    let interval;
-    if (findMode) {
-      interval = setInterval(() => {
-        setCountup((prev) => {
-          if (!findMode) {
-            clearInterval(interval);
-          }
-          return prev + 1;
-        });
-      }, 1000);
-    }
-
-    return () => clearInterval(interval);
-  }, [findMode]);
-
   const handleOpenCreateRoomModal = useCallback(() => {
     setNewRoomModalShow(true);
     // socket.emit('create-room', { user });
   }, []);
 
-  const handleCreateNewRoom = () => {
+  const handleCreateNewRoom = useCallback(() => {
     socket.emit('create-room', { user, option: newRoomData });
-  };
+  }, [newRoomData, user]);
 
   const handleRoomClick = useCallback(
     (roomId) => {
+      if (user.room) {
+        history.push(`/${user.room}`);
+        return;
+      }
       history.push(`/${roomId}`);
     },
-    [history]
+    [history, user]
   );
+
+  console.log(modalData);
 
   const handleUserClick = (user) => {
     setModalData(() => ({ show: true, player: user }));
   };
 
-  const handleHideModal = () => {
+  const handleHideModal = useCallback(() => {
     setModalData(() => ({ show: false }));
-  };
+  }, []);
 
-  const handleHideCreateRoomModal = () => {
+  const handleHideCreateRoomModal = useCallback(() => {
     setNewRoomModalShow(false);
-  };
+  }, []);
 
-  const handleRedirectToProfile = () => {
+  const handleRedirectToProfile = useCallback(() => {
     props.history.push(`/profile/${modalData.player._id}`);
-  };
+  }, [props.history, modalData?.player?._id]);
 
   const handleChangeFieldRoomData = (field, value) => {
     setNewRoomData((prev) => ({ ...prev, [field]: value }));
@@ -129,7 +118,6 @@ const Main = (props) => {
     socket.emit('cancel-quick-match', { user });
     socket.off('quick-match-cli');
     setFindMode(false);
-    setCountup(1);
   }, [user]);
 
   const Layout = useMemo(
@@ -145,17 +133,16 @@ const Main = (props) => {
         ),
         right: () => (
           <>
-            {findMode ? (
-              <button
-                onClick={handleCancelFindMatch}
-                type="button"
-                className="flex flex-row items-center p-2 px-3 py-2 mr-2 font-semibold border-2 rounded-full text-main border-main focus:outline-none">
-                Finding match: {countup}
-                <ImCancelCircle className="ml-1" />
-              </button>
-            ) : (
-              <QuickMatchButton handleClick={handleQuickMatch} />
-            )}
+            <Button
+              onClick={findMode ? handleCancelFindMatch : handleQuickMatch}
+              type="button"
+              disabled={Number.isInteger(user?.room)}
+              className="flex flex-row items-center p-2 px-3 py-4 mr-2 font-semibold border-2 rounded-full text-main border-main focus:outline-none">
+              {findMode ? 'Finding Match' : 'Quick Match'}
+              {findMode && <Spin size="small" className="ml-1 mr-2 -mb-1" />}
+              {findMode && <ImCancelCircle />}
+            </Button>
+
             <AddButton handleClick={handleOpenCreateRoomModal} />
           </>
         )
@@ -166,7 +153,7 @@ const Main = (props) => {
       handleQuickMatch,
       handleCancelFindMatch,
       findMode,
-      countup
+      user?.room
     ]
   );
 

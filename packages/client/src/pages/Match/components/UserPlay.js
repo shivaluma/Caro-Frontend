@@ -33,11 +33,11 @@ export default function UserPlay({ user, winner, tick }) {
             className={clsx(
               'px-3 py-2 font-semibold text-white rounded-md mt-1',
               // eslint-disable-next-line no-nested-ternary
-              user._id === winner._id ? 'bg-green-600' : winner ? 'bg-red-600' : 'bg-yellow-600'
+              user._id === winner?._id ? 'bg-green-600' : winner ? 'bg-red-600' : 'bg-yellow-600'
             )}>
             {
               // eslint-disable-next-line no-nested-ternary
-              user._id === winner._id ? 'WIN' : winner ? 'LOSE' : 'DRAW'
+              user._id === winner?._id ? 'WIN' : winner ? 'LOSE' : 'DRAW'
             }
           </span>
         </>

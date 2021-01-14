@@ -6,7 +6,9 @@
     "dev:a": "yarn --cwd packages/admin start"
   },
   "workspaces": [
-    "packages/*"
+    "packages/client",
+    "packages/admin",
+    "packages/common"
   ],
   "license": "MIT"
 }

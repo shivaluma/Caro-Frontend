@@ -3,6 +3,7 @@ import React from 'react';
 import { Avatar } from 'antd';
 import { ImTrophy } from 'react-icons/im';
 import { FiLogOut } from 'react-icons/fi';
+import clsx from 'clsx';
 
 export default function UserPlay({
   user,
@@ -29,10 +30,20 @@ export default function UserPlay({
               <FiLogOut className="text-lg" />
             </button>
           )}
-          <Avatar
-            size={64}
-            src="https://cdn.dribbble.com/users/4557429/avatars/small/open-uri20191213-19471-145569c?1576296398"
-          />
+          <div className="relative">
+            <Avatar
+              size={64}
+              src="https://cdn.dribbble.com/users/4557429/avatars/small/open-uri20191213-19471-145569c?1576296398"
+            />
+            <span
+              className={clsx(
+                'text-2xl font-bold bottom-0 right-0 absolute',
+                pos === 1 ? 'text-red-500' : 'text-blue-500'
+              )}>
+              {pos === 1 ? 'X' : 'O'}
+            </span>
+          </div>
+
           <span className="mt-2 text-base font-medium">{user.email}</span>
           <div className="flex text-xs font-semibold">
             <span className="text-green-600">{user.wincount || 0}W</span>

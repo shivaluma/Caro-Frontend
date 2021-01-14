@@ -194,12 +194,18 @@ const Room = ({ match, history, location }) => {
     });
 
     socket.on('game-end-cli', ({ board, next, lastTick, move }) => {
-      console.log('GAME END');
+      console.log('Game end');
       if (next === null) {
         setWinner('Draw');
       } else {
         setWinner(next === true ? 'Player 1 win' : 'Player 2 win');
       }
+      setUserAccepter(() => ({
+        firstPlayer: false,
+        secondPlayer: false
+      }));
+
+      setIsModalVisible(false);
 
       setGameData((prev) => ({
         ...prev,
@@ -210,17 +216,13 @@ const Room = ({ match, history, location }) => {
         lastTick,
         move: []
       }));
-      setCountdown(() => room?.time);
+      // setCountdown(() => room?.time);
       setTimeMileStone(() => new Date());
       setClockToggle(() => false);
-      setUserAccepter(() => ({
-        firstPlayer: false,
-        secondPlayer: false
-      }));
     });
 
     socket.on('claim-draw-cli', () => {
-      if (user._id === room.firstPlayer || user._id === room.secondPlayer) setIsModalVisible(true);
+      if (gameData.pos) setIsModalVisible(true);
     });
 
     socket.on('new-chat-message', (message) => {
@@ -268,6 +270,10 @@ const Room = ({ match, history, location }) => {
         secondPlayer.point -= 25;
       }
       setRoom((prev) => ({ ...prev, firstPlayer, secondPlayer }));
+      setGameData((prev) => ({
+        ...prev,
+        started: false
+      }));
     }
 
     if (winner === 'Player 2 win') {
@@ -281,7 +287,7 @@ const Room = ({ match, history, location }) => {
 
       if (secondPlayer) {
         secondPlayer.wincount += 1;
-        secondPlayer.point -= 25;
+        secondPlayer.point += 25;
       }
       setRoom((prev) => ({ ...prev, firstPlayer, secondPlayer }));
     }
@@ -484,66 +490,77 @@ const Room = ({ match, history, location }) => {
   ]);
 
   useEffect(() => {
-    if (userAccepter.firstPlayer && userAccepter.secondPlayer && !gameData.started) {
+    if (userAccepter.firstPlayer && userAccepter.secondPlayer) {
       setCountdown(() => room?.time);
-      setTimeMileStone(() => new Date());
+
+      if (!timeMileStone) {
+        setTimeMileStone(() => new Date());
+      }
 
       setGameData((prev) => ({
         ...prev,
         started: true
       }));
     }
-  }, [userAccepter, room?.time, gameData.started]);
+  }, [userAccepter, room?.time, timeMileStone]);
 
   useEffect(() => {
-    console.log(gameData.started);
     if (gameData.started) {
       if (countdown === 0) {
-        if (gameData.pos === 1) {
+        if (gameData.pos === 1 && gameData?.userTurn?._id !== user._id) {
           const roomIdNum = Number(match.params.id);
           socket.emit('game-end', {
             board: gameData.board,
             roomId: roomIdNum,
             next: gameData.next,
             lastTick: [3, 3],
-            lose: gameData.next ? room?.firstPlayer : room?.secondPlayer
+            lose: room?.secondPlayer
           });
-
-          setClockToggle(() => false);
-          if (!room?.firstPlayer?._id || !room?.secondPlayer?._id) return;
-
-          if (room?.firstPlayer._id === user._id) {
-            setRoom((prev) => ({ ...prev, firstPlayer: null }));
-            setGameData((prev) => ({
-              ...prev,
-              pos: null
-            }));
-            socket.emit('change-side', { roomId: match.params.id, user, side: null });
-          } else if (room?.secondPlayer._id === user._id) {
-            setRoom((prev) => ({ ...prev, secondPlayer: null }));
-            setGameData((prev) => ({
-              ...prev,
-              pos: null
-            }));
-            socket.emit('change-side', { roomId: match.params.id, user, side: null });
-          }
-          setCountdown(() => room?.time);
-          setTimeMileStone(() => new Date());
-          setUserAccepter(() => ({
-            firstPlayer: false,
-            secondPlayer: false
-          }));
-          // setUserAccepter(() => ({
-          //   firstPlayer: false,
-          //   secondPlayer: false
-          // }));
-          // setGameData((prev) => ({
-          //   ...prev,
-          //   started: false
-          // }));
-          // setClockToggle(() => false);
-          // setCountdown(() => room?.time);
+        } else if (gameData.pos === 2 && gameData?.userTurn?._id !== user._id) {
+          const roomIdNum = Number(match.params.id);
+          socket.emit('game-end', {
+            board: gameData.board,
+            roomId: roomIdNum,
+            next: gameData.next,
+            lastTick: [3, 3],
+            lose: room?.firstPlayer
+          });
         }
+
+        setClockToggle(() => false);
+        if (!room?.firstPlayer?._id || !room?.secondPlayer?._id) return;
+        if (room?.firstPlayer._id === user._id && user._id !== gameData?.userTurn?._id) {
+          setRoom((prev) => ({ ...prev, secondPlayer: null }));
+          socket.emit('change-side', {
+            roomId: match.params.id,
+            user: room?.secondPlayer,
+            side: null
+          });
+        } else if (room?.secondPlayer._id === user._id && user._id !== gameData?.userTurn?._id) {
+          setRoom((prev) => ({ ...prev, firstPlayer: null }));
+
+          socket.emit('change-side', {
+            roomId: match.params.id,
+            user: room?.firstPlayer,
+            side: null
+          });
+        }
+        setCountdown(() => room?.time);
+        setTimeMileStone(() => new Date());
+        setUserAccepter(() => ({
+          firstPlayer: false,
+          secondPlayer: false
+        }));
+        // setUserAccepter(() => ({
+        //   firstPlayer: false,
+        //   secondPlayer: false
+        // }));
+        // setGameData((prev) => ({
+        //   ...prev,
+        //   started: false
+        // }));
+        // setClockToggle(() => false);
+        // setCountdown(() => room?.time);
       }
     }
   }, [
@@ -555,6 +572,7 @@ const Room = ({ match, history, location }) => {
     match.params.id,
     room?.time,
     user,
+    gameData?.userTurn?._id,
     room?.firstPlayer,
     room?.secondPlayer
   ]);
@@ -767,7 +785,10 @@ const Room = ({ match, history, location }) => {
   if (gameData.pos === null && room?.firstPlayer && room?.secondPlayer) {
     if (!gameData.started) {
       indicator = (
-        <div className="p-2 text-sm text-white bg-red-500 center-absolute">Waiting for start</div>
+        <div className="flex flex-col p-2 text-sm text-white bg-red-500 center-absolute">
+          {winner && <span>{winner}</span>}
+          <span>Waiting for start</span>
+        </div>
       );
     } else {
       indicator = null;
@@ -861,14 +882,16 @@ const Room = ({ match, history, location }) => {
               <div className="flex-1 p-4 my-6 bg-gray-100 rounded-lg">
                 <div className="flex flex-row">
                   <button
-                    className="flex items-center px-3 py-2 font-medium text-white rounded-md bg-main"
+                    className="flex items-center px-3 py-2 font-medium text-white rounded-md bg-main disabled:bg-gray-300"
                     type="button"
+                    disabled={!gameData.pos || gameData?.userTurn?._id !== user?._id}
                     onClick={indicator ? null : handleClaimDraw}>
                     <FaHandshake className="mr-2" /> Claim a draw
                   </button>
                   <button
-                    className="flex items-center px-3 py-2 ml-4 font-medium text-white rounded-md bg-main"
+                    className="flex items-center px-3 py-2 ml-4 font-medium text-white rounded-md bg-main disabled:bg-gray-300 disabled:cursor-not-allow"
                     type="button"
+                    disabled={!gameData.pos}
                     onClick={handleResign}>
                     <AiOutlineFlag className="mr-2" /> Resign
                   </button>
