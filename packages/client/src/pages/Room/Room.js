@@ -128,13 +128,13 @@ const Room = ({ match, history, location }) => {
             type="button"
             key="right"
             onClick={handleLeaveRoomClick}
-            disabled={gameData.started}
+            disabled={gameData.started && gameData.pos}
             className="px-3 py-2 mr-2 font-semibold border-2 rounded-full text-main border-main disabled:border-gray-500 disabled:cursor-not-allowed disabled:text-gray-500">
             Leave Room
           </button>
         )
       }),
-    [match.params.id, handleLeaveRoomClick, gameData.started]
+    [match.params.id, handleLeaveRoomClick, gameData.started, gameData.pos]
   );
 
   const onUserLeaveRoom = useCallback((user) => {
