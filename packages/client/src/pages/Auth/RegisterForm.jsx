@@ -80,20 +80,17 @@ const RegisterForm = ({ changeMode }) => {
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="flex flex-col">
         <label htmlFor="email">
-          <span className="px-0 mb-1 text-left tile-structure-name ">Email</span>
+          <span className="px-0 mb-1 text-left tile-structure-name">Email</span>
           <input
             name="email"
             id="email"
+            type="email"
             className={clsx(
               'w-full p-2 border border-gray-230 rounded-md focus:outline-none',
               errors.email && 'border-red-500'
             )}
             ref={register({
-              required: 'Required',
-              pattern: {
-                value: /^.{6,}$/i,
-                message: 'email must contain at least 6 characters.'
-              }
+              required: 'Required'
             })}
             autoComplete="on"
           />
